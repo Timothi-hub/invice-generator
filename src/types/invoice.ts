@@ -6,6 +6,7 @@ export interface InvoiceItem {
 }
 
 export interface InvoiceData {
+  id?: string; // Optional - only present for saved invoices
   invoiceNumber: string;
   invoiceDate: string;
   customerName: string;
