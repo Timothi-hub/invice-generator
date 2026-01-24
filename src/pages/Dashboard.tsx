@@ -1,38 +1,88 @@
 import { useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
+import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
 import { InvoiceData, calculateTotal, calculateProfit } from '@/types/invoice';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
 import CompanySettings from '@/components/invoice/CompanySettings';
+import InvoiceHistory from '@/components/invoice/InvoiceHistory';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, Menu, X } from 'lucide-react';
+import { LogOut, FileText, Menu, Save } from 'lucide-react';
 import { toast } from 'sonner';
+
+const getEmptyInvoice = (): InvoiceData => ({
+  invoiceNumber: '',
+  invoiceDate: new Date().toISOString().split('T')[0],
+  customerName: '',
+  customerAddress: '',
+  items: [],
+  deliveryCharges: 0,
+  designingCharges: 0,
+  expenses: 0,
+  termsConditions: 'Payment due within 30 days.',
+});
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { invoices, loading: invoicesLoading, saveInvoice, deleteInvoice } = useInvoices();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
-
-  const today = new Date().toISOString().split('T')[0];
-
-  const [invoice, setInvoice] = useState<InvoiceData>({
-    invoiceNumber: '',
-    invoiceDate: today,
-    customerName: '',
-    customerAddress: '',
-    items: [],
-    deliveryCharges: 0,
-    designingCharges: 0,
-    expenses: 0,
-    termsConditions: 'Payment due within 30 days.',
-  });
+  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | undefined>();
+  const [invoice, setInvoice] = useState<InvoiceData>(getEmptyInvoice());
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
     toast.success('Logged out successfully');
+  };
+
+  const handleSave = async () => {
+    if (!invoice.invoiceNumber) {
+      toast.error('Please enter an invoice number');
+      return;
+    }
+    if (!invoice.customerName) {
+      toast.error('Please enter a customer name');
+      return;
+    }
+
+    setIsSaving(true);
+    const savedId = await saveInvoice(invoice, currentInvoiceId);
+    if (savedId) {
+      setCurrentInvoiceId(savedId);
+    }
+    setIsSaving(false);
+  };
+
+  const handleSelectInvoice = (savedInvoice: SavedInvoice) => {
+    setCurrentInvoiceId(savedInvoice.id);
+    setInvoice({
+      id: savedInvoice.id,
+      invoiceNumber: savedInvoice.invoiceNumber,
+      invoiceDate: savedInvoice.invoiceDate,
+      customerName: savedInvoice.customerName,
+      customerAddress: savedInvoice.customerAddress,
+      items: savedInvoice.items,
+      deliveryCharges: savedInvoice.deliveryCharges,
+      designingCharges: savedInvoice.designingCharges,
+      expenses: savedInvoice.expenses,
+      termsConditions: savedInvoice.termsConditions,
+    });
+  };
+
+  const handleNewInvoice = () => {
+    setCurrentInvoiceId(undefined);
+    setInvoice(getEmptyInvoice());
+  };
+
+  const handleDeleteInvoice = async (id: string) => {
+    await deleteInvoice(id);
+    if (currentInvoiceId === id) {
+      handleNewInvoice();
+    }
   };
 
   if (profileLoading) {
@@ -112,8 +162,24 @@ const Dashboard = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Form Section */}
           <div className={`space-y-6 ${showMobilePreview ? 'hidden lg:block' : ''}`}>
+            {/* Invoice History */}
+            <InvoiceHistory
+              invoices={invoices}
+              loading={invoicesLoading}
+              onSelect={handleSelectInvoice}
+              onDelete={handleDeleteInvoice}
+              onNew={handleNewInvoice}
+              selectedId={currentInvoiceId}
+            />
+
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">Create Invoice</h2>
+              <h2 className="text-2xl font-bold text-foreground">
+                {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
+              </h2>
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : currentInvoiceId ? 'Update' : 'Save'}
+              </Button>
             </div>
             <InvoiceForm invoice={invoice} onChange={setInvoice} />
           </div>
