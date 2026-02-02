@@ -1,17 +1,25 @@
 import { useRef, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
+import { useCustomers, Customer } from '@/hooks/useCustomers';
 import { InvoiceData, calculateTotal, calculateProfit } from '@/types/invoice';
 import { InvoiceTemplate, invoiceTemplates } from '@/types/invoiceTemplates';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
-import CompanySettings from '@/components/invoice/CompanySettings';
 import InvoiceHistory from '@/components/invoice/InvoiceHistory';
 import TemplateSelector from '@/components/invoice/TemplateSelector';
+import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, Menu, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { FileText, Menu, Save, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 const getEmptyInvoice = (): InvoiceData => ({
@@ -27,20 +35,15 @@ const getEmptyInvoice = (): InvoiceData => ({
 });
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
-  const { profile, loading: profileLoading, updateProfile } = useProfile();
+  const { profile, loading: profileLoading } = useProfile();
   const { invoices, loading: invoicesLoading, saveInvoice, deleteInvoice } = useInvoices();
+  const { customers } = useCustomers();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [currentInvoiceId, setCurrentInvoiceId] = useState<string | undefined>();
   const [invoice, setInvoice] = useState<InvoiceData>(getEmptyInvoice());
   const [isSaving, setIsSaving] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(invoiceTemplates[0]);
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast.success('Logged out successfully');
-  };
 
   const handleSave = async () => {
     if (!invoice.invoiceNumber) {
@@ -88,14 +91,24 @@ const Dashboard = () => {
     }
   };
 
+  const handleSelectCustomer = (customerId: string) => {
+    const customer = customers.find((c) => c.id === customerId);
+    if (customer) {
+      setInvoice({
+        ...invoice,
+        customerName: customer.name,
+        customerAddress: customer.address || '',
+      });
+    }
+  };
+
   if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted/30">
-        <div className="flex flex-col items-center gap-4">
+      <AppLayout title="Invoices">
+        <div className="flex items-center justify-center py-20">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-muted-foreground">Loading...</p>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
@@ -111,38 +124,9 @@ const Dashboard = () => {
   const profit = calculateProfit(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.expenses);
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header */}
-      <header className="invoice-header-gradient text-white sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">{defaultProfile.companyName}</h1>
-              <p className="text-xs opacity-80">Billing Software</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <CompanySettings profile={defaultProfile} onSave={updateProfile} />
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleSignOut}
-              className="text-white hover:bg-white/20"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
+    <AppLayout title="Invoices">
       {/* Mobile Toggle */}
-      <div className="lg:hidden sticky top-[72px] z-40 bg-background border-b p-2">
+      <div className="lg:hidden mb-4">
         <Button
           variant="outline"
           className="w-full"
@@ -160,51 +144,80 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Form Section */}
-          <div className={`space-y-6 ${showMobilePreview ? 'hidden lg:block' : ''}`}>
-            {/* Invoice History */}
-            <InvoiceHistory
-              invoices={invoices}
-              loading={invoicesLoading}
-              onSelect={handleSelectInvoice}
-              onDelete={handleDeleteInvoice}
-              onNew={handleNewInvoice}
-              selectedId={currentInvoiceId}
-            />
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Form Section */}
+        <div className={`space-y-4 ${showMobilePreview ? 'hidden lg:block' : ''}`}>
+          {/* Invoice History */}
+          <InvoiceHistory
+            invoices={invoices}
+            loading={invoicesLoading}
+            onSelect={handleSelectInvoice}
+            onDelete={handleDeleteInvoice}
+            onNew={handleNewInvoice}
+            selectedId={currentInvoiceId}
+          />
 
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">
-                {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
-              </h2>
-              <Button onClick={handleSave} disabled={isSaving}>
-                <Save className="w-4 h-4 mr-2" />
-                {isSaving ? 'Saving...' : currentInvoiceId ? 'Update' : 'Save'}
-              </Button>
-            </div>
-            <InvoiceForm invoice={invoice} onChange={setInvoice} />
+          {/* Customer Selector */}
+          {customers.length > 0 && (
+            <Card>
+              <CardHeader className="py-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  Quick Select Customer
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Select onValueChange={handleSelectCustomer}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a saved customer..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                        {customer.phone && ` - ${customer.phone}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-foreground">
+              {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
+            </h2>
+            <Button onClick={handleSave} disabled={isSaving}>
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? 'Saving...' : currentInvoiceId ? 'Update' : 'Save'}
+            </Button>
           </div>
 
-          {/* Preview Section */}
-          <div className={`space-y-4 ${!showMobilePreview ? 'hidden lg:block' : ''}`}>
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <h2 className="text-2xl font-bold text-foreground">Preview</h2>
-              <TemplateSelector
-                selectedTemplate={selectedTemplate}
-                onSelectTemplate={setSelectedTemplate}
-              />
-            </div>
+          <InvoiceForm invoice={invoice} onChange={setInvoice} />
+        </div>
 
-            {/* Export Options */}
-            <div className="bg-card rounded-lg border p-4">
+        {/* Preview Section */}
+        <div className={`space-y-4 ${!showMobilePreview ? 'hidden lg:block' : ''}`}>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="text-xl font-bold text-foreground">Preview</h2>
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={setSelectedTemplate}
+            />
+          </div>
+
+          {/* Export Options */}
+          <Card>
+            <CardContent className="p-4">
               <h3 className="font-semibold mb-3 text-foreground">Export Options</h3>
               <ExportOptions invoiceRef={invoiceRef} invoiceNumber={invoice.invoiceNumber || 'draft'} />
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Business Summary */}
-            <div className="bg-card rounded-lg border p-4 no-print">
+          {/* Business Summary */}
+          <Card className="no-print">
+            <CardContent className="p-4">
               <h3 className="font-semibold mb-3 text-foreground">Business Summary</h3>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div className="p-3 bg-muted rounded-lg">
@@ -222,22 +235,22 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Invoice Preview */}
-            <div className="overflow-auto rounded-lg border" style={{ maxHeight: '800px' }}>
-              <InvoicePreview
-                ref={invoiceRef}
-                invoice={invoice}
-                profile={defaultProfile}
-                showExpensesProfit={false}
-                template={selectedTemplate}
-              />
-            </div>
+          {/* Invoice Preview */}
+          <div className="overflow-auto rounded-lg border" style={{ maxHeight: '700px' }}>
+            <InvoicePreview
+              ref={invoiceRef}
+              invoice={invoice}
+              profile={defaultProfile}
+              showExpensesProfit={false}
+              template={selectedTemplate}
+            />
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

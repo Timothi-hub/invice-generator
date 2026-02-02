@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoice_items: {
         Row: {
           created_at: string
@@ -53,6 +89,7 @@ export type Database = {
         Row: {
           created_at: string
           customer_address: string | null
+          customer_id: string | null
           customer_name: string
           delivery_charges: number | null
           designing_charges: number | null
@@ -68,6 +105,7 @@ export type Database = {
         Insert: {
           created_at?: string
           customer_address?: string | null
+          customer_id?: string | null
           customer_name: string
           delivery_charges?: number | null
           designing_charges?: number | null
@@ -83,6 +121,7 @@ export type Database = {
         Update: {
           created_at?: string
           customer_address?: string | null
+          customer_id?: string | null
           customer_name?: string
           delivery_charges?: number | null
           designing_charges?: number | null
@@ -95,7 +134,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "invoices_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
