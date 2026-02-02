@@ -1,0 +1,43 @@
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
+import { useProfile } from '@/hooks/useProfile';
+import CompanySettings from '@/components/invoice/CompanySettings';
+
+interface AppLayoutProps {
+  children: React.ReactNode;
+  title: string;
+}
+
+const AppLayout = ({ children, title }: AppLayoutProps) => {
+  const { profile, updateProfile } = useProfile();
+
+  const defaultProfile = profile || {
+    companyName: 'Your Company',
+    address: 'Your Address Here',
+    phone: '+91 XXXXX XXXXX',
+    website: 'www.yourcompany.com',
+    directorName: 'Director Name',
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <SidebarInset className="flex-1">
+          <header className="sticky top-0 z-40 bg-background border-b">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger />
+                <h1 className="text-xl font-bold text-foreground">{title}</h1>
+              </div>
+              <CompanySettings profile={defaultProfile} onSave={updateProfile} />
+            </div>
+          </header>
+          <main className="p-4 md:p-6">{children}</main>
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
+  );
+};
+
+export default AppLayout;
