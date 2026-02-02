@@ -3,11 +3,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
 import { InvoiceData, calculateTotal, calculateProfit } from '@/types/invoice';
+import { InvoiceTemplate, invoiceTemplates } from '@/types/invoiceTemplates';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
 import CompanySettings from '@/components/invoice/CompanySettings';
 import InvoiceHistory from '@/components/invoice/InvoiceHistory';
+import TemplateSelector from '@/components/invoice/TemplateSelector';
 import { Button } from '@/components/ui/button';
 import { LogOut, FileText, Menu, Save } from 'lucide-react';
 import { toast } from 'sonner';
@@ -33,6 +35,7 @@ const Dashboard = () => {
   const [currentInvoiceId, setCurrentInvoiceId] = useState<string | undefined>();
   const [invoice, setInvoice] = useState<InvoiceData>(getEmptyInvoice());
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(invoiceTemplates[0]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -186,8 +189,12 @@ const Dashboard = () => {
 
           {/* Preview Section */}
           <div className={`space-y-4 ${!showMobilePreview ? 'hidden lg:block' : ''}`}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-3">
               <h2 className="text-2xl font-bold text-foreground">Preview</h2>
+              <TemplateSelector
+                selectedTemplate={selectedTemplate}
+                onSelectTemplate={setSelectedTemplate}
+              />
             </div>
 
             {/* Export Options */}
@@ -224,6 +231,7 @@ const Dashboard = () => {
                 invoice={invoice}
                 profile={defaultProfile}
                 showExpensesProfit={false}
+                template={selectedTemplate}
               />
             </div>
           </div>
