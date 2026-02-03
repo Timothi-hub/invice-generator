@@ -165,9 +165,14 @@
     @apply bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors;
   }
 
-  /* Print styles - hide expense/profit in print */
+  /* Print styles */
   @media print {
-    .no-print {
+    .no-print,
+    .sidebar,
+    header,
+    nav,
+    button,
+    [data-sidebar] {
       display: none !important;
     }
     
@@ -177,6 +182,44 @@
 
     body {
       background: white !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Invoice specific print styles */
+    .bg-white {
+      background: white !important;
+    }
+
+    /* Ensure colored backgrounds print correctly */
+    [style*="background"] {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Remove shadows and borders for cleaner print */
+    .shadow-xl,
+    .shadow-lg,
+    .shadow-md,
+    .shadow {
+      box-shadow: none !important;
+    }
+
+    /* Make sure the invoice takes full width */
+    .max-w-\\[210mm\\] {
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+
+    /* Hide everything except the invoice preview container */
+    main > *:not(.overflow-auto) {
+      display: none !important;
+    }
+
+    main .overflow-auto {
+      overflow: visible !important;
+      max-height: none !important;
+      border: none !important;
     }
   }
 }

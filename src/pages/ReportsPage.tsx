@@ -3,7 +3,22 @@ import { useInvoices } from '@/hooks/useInvoices';
 import AppLayout from '@/components/AppLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { TrendingUp, TrendingDown, DollarSign, FileText, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, FileText, Calendar, BarChart3 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from 'recharts';
 
 const ReportsPage = () => {
   const { invoices, loading } = useInvoices();
@@ -58,7 +73,7 @@ const ReportsPage = () => {
       .sort((a, b) => {
         const dateA = new Date(a.month);
         const dateB = new Date(b.month);
-        return dateB.getTime() - dateA.getTime();
+        return dateA.getTime() - dateB.getTime();
       });
 
     return {
@@ -73,6 +88,12 @@ const ReportsPage = () => {
   }, [invoices]);
 
   const formatCurrency = (amount: number) => `₹${amount.toFixed(2)}`;
+
+  // Pie chart data
+  const pieData = [
+    { name: 'Profit', value: Math.max(0, stats.totalProfit), color: 'hsl(145, 65%, 42%)' },
+    { name: 'Expenses', value: stats.totalExpenses, color: 'hsl(35, 90%, 55%)' },
+  ];
 
   if (loading) {
     return (
@@ -145,7 +166,126 @@ const ReportsPage = () => {
         </Card>
       </div>
 
-      {/* Monthly Breakdown */}
+      {/* Charts Row */}
+      <div className="grid lg:grid-cols-2 gap-6 mb-6">
+        {/* Bar Chart - Revenue vs Expenses */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5" />
+              Monthly Revenue & Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.byMonth.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No data available yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.byMonth}>
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v}`} />
+                  <Tooltip
+                    formatter={(value: number) => formatCurrency(value)}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="revenue" name="Revenue" fill="hsl(195, 75%, 35%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expenses" name="Expenses" fill="hsl(35, 90%, 55%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Pie Chart - Profit vs Expenses */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Profit Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {stats.byMonth.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-muted-foreground">
+                No data available yet
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Line Chart - Profit Trend */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            Profit Trend Over Time
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {stats.byMonth.length === 0 ? (
+            <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+              No data available yet
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={stats.byMonth}>
+                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `₹${v}`} />
+                <Tooltip
+                  formatter={(value: number) => formatCurrency(value)}
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  name="Profit"
+                  stroke="hsl(145, 65%, 42%)"
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(145, 65%, 42%)', strokeWidth: 2 }}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Monthly Breakdown Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -154,7 +294,7 @@ const ReportsPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px]">
+          <ScrollArea className="h-[300px]">
             {stats.byMonth.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">
                 No invoice data available yet.
@@ -171,7 +311,7 @@ const ReportsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.byMonth.map((row) => (
+                  {[...stats.byMonth].reverse().map((row) => (
                     <tr key={row.month} className="border-b hover:bg-muted/30">
                       <td className="py-3 px-4 font-medium">{row.month}</td>
                       <td className="py-3 px-4 text-right">{row.count}</td>
