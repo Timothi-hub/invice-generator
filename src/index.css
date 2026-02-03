@@ -167,15 +167,61 @@
 
   /* Print styles */
   @media print {
+    /* Hide all non-printable elements */
     .no-print,
-    .sidebar,
-    header,
-    nav,
     button,
-    [data-sidebar] {
+    [data-sidebar],
+    [data-sidebar-rail],
+    aside,
+    nav,
+    header:not(.print-header) {
       display: none !important;
     }
-    
+
+    /* Hide the entire sidebar wrapper */
+    [data-sidebar="sidebar"] {
+      display: none !important;
+      width: 0 !important;
+    }
+
+    /* Main wrapper adjustments */
+    .flex.min-h-svh.w-full {
+      display: block !important;
+    }
+
+    /* Main content area */
+    main {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    /* Hide form section, show only preview */
+    .grid.lg\\:grid-cols-2 > div:first-child {
+      display: none !important;
+    }
+
+    .grid.lg\\:grid-cols-2 > div:last-child > *:not(.overflow-auto) {
+      display: none !important;
+    }
+
+    .grid.lg\\:grid-cols-2 > div:last-child {
+      display: block !important;
+    }
+
+    .grid.lg\\:grid-cols-2 {
+      display: block !important;
+    }
+
+    /* Make invoice preview visible and full width */
+    .overflow-auto {
+      overflow: visible !important;
+      max-height: none !important;
+      border: none !important;
+      display: block !important;
+    }
+
     .print-only {
       display: block !important;
     }
@@ -186,40 +232,30 @@
       print-color-adjust: exact !important;
     }
 
-    /* Invoice specific print styles */
+    /* Invoice container */
+    .max-w-\\[210mm\\] {
+      max-width: 100% !important;
+      width: 100% !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+    }
+
     .bg-white {
       background: white !important;
     }
 
     /* Ensure colored backgrounds print correctly */
-    [style*="background"] {
+    * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
 
-    /* Remove shadows and borders for cleaner print */
+    /* Remove all shadows */
     .shadow-xl,
     .shadow-lg,
     .shadow-md,
     .shadow {
       box-shadow: none !important;
-    }
-
-    /* Make sure the invoice takes full width */
-    .max-w-\\[210mm\\] {
-      max-width: 100% !important;
-      width: 100% !important;
-    }
-
-    /* Hide everything except the invoice preview container */
-    main > *:not(.overflow-auto) {
-      display: none !important;
-    }
-
-    main .overflow-auto {
-      overflow: visible !important;
-      max-height: none !important;
-      border: none !important;
     }
   }
 }
