@@ -1,8 +1,10 @@
+import { useState, useMemo } from 'react';
 import { Customer } from '@/hooks/useCustomers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { User, Phone, Mail, MapPin, Trash2, Edit2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { User, Phone, Mail, MapPin, Trash2, Edit2, Search } from 'lucide-react';
 
 interface CustomerListProps {
   customers: Customer[];
@@ -21,6 +23,18 @@ const CustomerList = ({
   onDelete,
   selectedId,
 }: CustomerListProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredCustomers = useMemo(() => {
+    if (!searchQuery.trim()) return customers;
+    const query = searchQuery.toLowerCase();
+    return customers.filter(
+      (c) =>
+        c.name.toLowerCase().includes(query) ||
+        c.phone?.toLowerCase().includes(query) ||
+        c.email?.toLowerCase().includes(query)
+    );
+  }, [customers, searchQuery]);
   if (loading) {
     return (
       <Card>
@@ -38,21 +52,30 @@ const CustomerList = ({
 
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="space-y-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <User className="w-5 h-5" />
-          Customers ({customers.length})
+          Customers ({filteredCustomers.length})
         </CardTitle>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, phone, email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[400px]">
-          {customers.length === 0 ? (
+          {filteredCustomers.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
-              No customers yet. Add your first customer!
+              {customers.length === 0 ? 'No customers yet. Add your first customer!' : 'No matching customers found.'}
             </div>
           ) : (
             <div className="divide-y">
-              {customers.map((customer) => (
+              {filteredCustomers.map((customer) => (
                 <div
                   key={customer.id}
                   className={`p-4 cursor-pointer hover:bg-muted/50 transition-colors ${
