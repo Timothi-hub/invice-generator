@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Printer, FileText, Image } from 'lucide-react';
 import html2canvas from 'html2canvas';
@@ -12,7 +11,46 @@ interface ExportOptionsProps {
 
 const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber }) => {
   const handlePrint = () => {
-    window.print();
+    if (!invoiceRef.current) return;
+
+    // Print only the invoice (same DOM used for PDF/JPEG), avoiding full app layout.
+    const printWindow = window.open('', '_blank', 'width=900,height=650');
+    if (!printWindow) {
+      toast.error('Please allow pop-ups to print');
+      return;
+    }
+
+    const invoiceHtml = invoiceRef.current.outerHTML;
+
+    printWindow.document.open();
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Invoice ${invoiceNumber}</title>
+          <style>
+            @page { size: A4; margin: 10mm; }
+            html, body { margin: 0; padding: 0; background: #fff; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            #invoice-print-root { box-shadow: none !important; margin: 0 auto !important; }
+          </style>
+        </head>
+        <body>
+          ${invoiceHtml}
+          <script>
+            window.onload = () => {
+              window.focus();
+              window.print();
+              window.onafterprint = () => window.close();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   const handleExportPDF = async () => {
