@@ -167,29 +167,30 @@
 
   /* Print styles */
   @media print {
-    /* Hide all non-printable elements */
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    html,
+    body {
+      background: white !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Hide app chrome */
     .no-print,
     button,
     [data-sidebar],
     [data-sidebar-rail],
     aside,
     nav,
-    header:not(.print-header) {
+    header {
       display: none !important;
     }
 
-    /* Hide the entire sidebar wrapper */
-    [data-sidebar="sidebar"] {
-      display: none !important;
-      width: 0 !important;
-    }
-
-    /* Main wrapper adjustments */
-    .flex.min-h-svh.w-full {
-      display: block !important;
-    }
-
-    /* Main content area */
+    /* Main content should fill the page */
     main {
       margin: 0 !important;
       padding: 0 !important;
@@ -197,51 +198,35 @@
       max-width: 100% !important;
     }
 
-    /* Hide form section, show only preview */
+    /* Dashboard: hide form column, keep preview column */
     .grid.lg\\:grid-cols-2 > div:first-child {
       display: none !important;
-    }
-
-    .grid.lg\\:grid-cols-2 > div:last-child > *:not(.overflow-auto) {
-      display: none !important;
-    }
-
-    .grid.lg\\:grid-cols-2 > div:last-child {
-      display: block !important;
     }
 
     .grid.lg\\:grid-cols-2 {
       display: block !important;
     }
 
-    /* Make invoice preview visible and full width */
+    .grid.lg\\:grid-cols-2 > div:last-child {
+      display: block !important;
+    }
+
+    .grid.lg\\:grid-cols-2 > div:last-child > *:not(.overflow-auto) {
+      display: none !important;
+    }
+
+    /* Avoid clipping from scroll containers */
     .overflow-auto {
       overflow: visible !important;
       max-height: none !important;
       border: none !important;
-      display: block !important;
     }
 
-    .print-only {
-      display: block !important;
-    }
-
-    body {
-      background: white !important;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    /* Invoice container */
-    .max-w-\\[210mm\\] {
-      max-width: 100% !important;
-      width: 100% !important;
-      margin: 0 !important;
+    /* Invoice itself */
+    #invoice-print-root {
       box-shadow: none !important;
-    }
-
-    .bg-white {
-      background: white !important;
+      margin: 0 auto !important;
+      max-width: 100% !important;
     }
 
     /* Ensure colored backgrounds print correctly */

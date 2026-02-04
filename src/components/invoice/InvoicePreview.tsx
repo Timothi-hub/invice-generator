@@ -25,7 +25,12 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
   };
 
   return (
-    <div ref={ref} className="bg-white w-full max-w-[210mm] mx-auto shadow-xl" style={{ minHeight: '297mm' }}>
+    <div
+      ref={ref}
+      id="invoice-print-root"
+      className="bg-white w-full max-w-[210mm] mx-auto shadow-xl"
+      style={{ minHeight: '297mm' }}
+    >
       {/* Header */}
       <div
         className="p-6 relative overflow-hidden"
