@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { useInvoices } from '@/hooks/useInvoices';
 
 interface InvoiceFormProps {
   invoice: InvoiceData;
@@ -12,6 +13,36 @@ interface InvoiceFormProps {
 }
 
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
+  const { invoices } = useInvoices();
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
+  const [duplicateInvoice, setDuplicateInvoice] = useState<{ number: string; customerName: string } | null>(null);
+
+  // Check for duplicate invoice number
+  useEffect(() => {
+    if (!invoice.invoiceNumber.trim()) {
+      setShowDuplicateWarning(false);
+      setDuplicateInvoice(null);
+      return;
+    }
+
+    const existingInvoice = invoices.find(
+      (inv) =>
+        inv.invoiceNumber.toLowerCase() === invoice.invoiceNumber.toLowerCase() &&
+        inv.id !== invoice.id // Don't match self when editing
+    );
+
+    if (existingInvoice) {
+      setShowDuplicateWarning(true);
+      setDuplicateInvoice({
+        number: existingInvoice.invoiceNumber,
+        customerName: existingInvoice.customerName,
+      });
+    } else {
+      setShowDuplicateWarning(false);
+      setDuplicateInvoice(null);
+    }
+  }, [invoice.invoiceNumber, invoice.id, invoices]);
+
   const updateField = <K extends keyof InvoiceData>(field: K, value: InvoiceData[K]) => {
     onChange({ ...invoice, [field]: value });
   };
@@ -51,7 +82,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
               value={invoice.invoiceNumber}
               onChange={(e) => updateField('invoiceNumber', e.target.value)}
               placeholder="INV-0001"
+              className={showDuplicateWarning ? 'border-warning focus-visible:ring-warning' : ''}
             />
+            {showDuplicateWarning && duplicateInvoice && (
+              <div className="flex items-start gap-2 p-2 bg-warning/10 border border-warning/30 rounded-md text-warning text-sm">
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  Invoice #{duplicateInvoice.number} already exists for customer "{duplicateInvoice.customerName}"
+                </span>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoiceDate">Date</Label>
