@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { User, Phone, Mail, MapPin, Trash2, Edit2, Search } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { User, Phone, Mail, MapPin, Trash2, Edit2, Search, Filter, ChevronDown } from 'lucide-react';
+import CustomerFilters, { CustomerFilterState } from './CustomerFilters';
 
 interface CustomerListProps {
   customers: Customer[];
@@ -24,17 +26,68 @@ const CustomerList = ({
   selectedId,
 }: CustomerListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<CustomerFilterState>({
+    addressContains: '',
+    hasPhone: null,
+    hasEmail: null,
+    sortBy: 'name',
+  });
 
   const filteredCustomers = useMemo(() => {
-    if (!searchQuery.trim()) return customers;
-    const query = searchQuery.toLowerCase();
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(query) ||
-        c.phone?.toLowerCase().includes(query) ||
-        c.email?.toLowerCase().includes(query)
-    );
-  }, [customers, searchQuery]);
+    let result = customers;
+
+    // Text search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.name.toLowerCase().includes(query) ||
+          c.phone?.toLowerCase().includes(query) ||
+          c.email?.toLowerCase().includes(query)
+      );
+    }
+
+    // Address filter
+    if (filters.addressContains.trim()) {
+      const addressQuery = filters.addressContains.toLowerCase();
+      result = result.filter((c) =>
+        c.address?.toLowerCase().includes(addressQuery)
+      );
+    }
+
+    // Has phone filter
+    if (filters.hasPhone !== null) {
+      result = result.filter((c) =>
+        filters.hasPhone ? !!c.phone?.trim() : !c.phone?.trim()
+      );
+    }
+
+    // Has email filter
+    if (filters.hasEmail !== null) {
+      result = result.filter((c) =>
+        filters.hasEmail ? !!c.email?.trim() : !c.email?.trim()
+      );
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      if (filters.sortBy === 'updated') {
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return result;
+  }, [customers, searchQuery, filters]);
+
+  const activeFilterCount = [
+    filters.addressContains,
+    filters.hasPhone !== null,
+    filters.hasEmail !== null,
+    filters.sortBy !== 'name',
+  ].filter(Boolean).length;
+
   if (loading) {
     return (
       <Card>
@@ -66,6 +119,27 @@ const CustomerList = ({
             className="pl-9"
           />
         </div>
+        
+        {/* Advanced Filters */}
+        <Collapsible open={showFilters} onOpenChange={setShowFilters}>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" size="sm" className="w-full justify-between">
+              <span className="flex items-center gap-2">
+                <Filter className="w-4 h-4" />
+                Advanced Filters
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <CustomerFilters filters={filters} onFiltersChange={setFilters} />
+          </CollapsibleContent>
+        </Collapsible>
       </CardHeader>
       <CardContent className="p-0">
         <ScrollArea className="h-[400px]">
