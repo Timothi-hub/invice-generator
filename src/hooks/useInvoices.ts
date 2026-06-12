@@ -56,6 +56,7 @@ export const useInvoices = () => {
             quantity: item.quantity,
             description: item.description,
             price: Number(item.price),
+            unit: (item as any).unit || 'pcs',
           })),
       }));
 
@@ -105,6 +106,7 @@ export const useInvoices = () => {
               quantity: item.quantity,
               description: item.description,
               price: item.price,
+              unit: item.unit || 'pcs',
             }))
           );
           if (itemsError) throw itemsError;
@@ -142,6 +144,7 @@ export const useInvoices = () => {
               quantity: item.quantity,
               description: item.description,
               price: item.price,
+              unit: item.unit || 'pcs',
             }))
           );
           if (itemsError) throw itemsError;
