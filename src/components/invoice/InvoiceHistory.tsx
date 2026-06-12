@@ -95,7 +95,8 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
               const total = calculateTotal(
                 invoice.items,
                 invoice.deliveryCharges,
-                invoice.designingCharges
+                invoice.designingCharges,
+                invoice.discount || 0
               );
               const isSelected = selectedId === invoice.id;
 

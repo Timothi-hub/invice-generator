@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import CustomersPage from "./pages/CustomersPage";
 import ReportsPage from "./pages/ReportsPage";
 import DataPage from "./pages/DataPage";
+import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -54,6 +55,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <DataPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <InvoiceHistoryPage />
                 </ProtectedRoute>
               }
             />
