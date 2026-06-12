@@ -58,6 +58,7 @@ export type Database = {
           invoice_id: string
           price: number
           quantity: number
+          unit: string
         }
         Insert: {
           created_at?: string
@@ -66,6 +67,7 @@ export type Database = {
           invoice_id: string
           price: number
           quantity?: number
+          unit?: string
         }
         Update: {
           created_at?: string
@@ -74,6 +76,7 @@ export type Database = {
           invoice_id?: string
           price?: number
           quantity?: number
+          unit?: string
         }
         Relationships: [
           {
@@ -183,6 +186,36 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      saved_items: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          price: number
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          price?: number
+          unit?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

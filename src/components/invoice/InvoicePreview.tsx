@@ -124,7 +124,12 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
           <tbody>
             {invoice.items.map((item, index) => (
               <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
-                <td className="py-3 px-4 text-foreground">{item.quantity}</td>
+                <td className="py-3 px-4 text-foreground">
+                  {item.quantity}
+                  {item.unit && item.unit !== 'pcs' && (
+                    <span className="text-muted-foreground text-xs ml-1">{item.unit}</span>
+                  )}
+                </td>
                 <td className="py-3 px-4 text-foreground">{item.description}</td>
                 <td className="py-3 px-4 text-right text-foreground">{formatCurrency(item.price)}</td>
                 <td className="py-3 px-4 text-right font-medium text-foreground">

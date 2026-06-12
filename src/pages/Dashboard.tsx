@@ -8,7 +8,6 @@ import { InvoiceTemplate, invoiceTemplates } from '@/types/invoiceTemplates';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
-import InvoiceHistory from '@/components/invoice/InvoiceHistory';
 import TemplateSelector from '@/components/invoice/TemplateSelector';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,7 @@ const getEmptyInvoice = (): InvoiceData => ({
 const Dashboard = () => {
   const location = useLocation();
   const { profile, loading: profileLoading } = useProfile();
-  const { invoices, loading: invoicesLoading, saveInvoice, deleteInvoice } = useInvoices();
+  const { invoices, saveInvoice, deleteInvoice } = useInvoices();
   const { customers } = useCustomers();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
@@ -160,16 +159,6 @@ const Dashboard = () => {
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Form Section */}
         <div className={`space-y-4 ${showMobilePreview ? 'hidden lg:block' : ''}`}>
-          {/* Invoice History */}
-          <InvoiceHistory
-            invoices={invoices}
-            loading={invoicesLoading}
-            onSelect={handleSelectInvoice}
-            onDelete={handleDeleteInvoice}
-            onNew={handleNewInvoice}
-            selectedId={currentInvoiceId}
-          />
-
           {/* Customer Selector */}
           {customers.length > 0 && (
             <Card>

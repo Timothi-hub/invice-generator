@@ -3,9 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
 import { Plus, Trash2, AlertTriangle } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useSavedItems } from '@/hooks/useSavedItems';
 
 interface InvoiceFormProps {
   invoice: InvoiceData;
@@ -14,6 +22,7 @@ interface InvoiceFormProps {
 
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   const { invoices } = useInvoices();
+  const { items: savedItems, upsertItem } = useSavedItems();
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateInvoice, setDuplicateInvoice] = useState<{ number: string; customerName: string } | null>(null);
 
@@ -53,6 +62,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       quantity: 1,
       description: '',
       price: 0,
+      unit: 'pcs',
     };
     updateField('items', [...invoice.items, newItem]);
   };
@@ -66,6 +76,19 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
   const removeItem = (id: string) => {
     updateField('items', invoice.items.filter((item) => item.id !== id));
+  };
+
+  const handleItemBlur = (item: InvoiceItem) => {
+    if (item.description.trim() && item.price > 0) {
+      upsertItem(item.description, item.price, item.unit || 'pcs');
+    }
+  };
+
+  const handlePickSaved = (id: string, savedId: string) => {
+    const s = savedItems.find((x) => x.id === savedId);
+    if (s) {
+      updateItem(id, { description: s.description, price: s.price, unit: s.unit });
+    }
   };
 
   return (
@@ -145,46 +168,89 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
         <div className="space-y-3">
           {invoice.items.map((item, index) => (
-            <div key={item.id} className="flex gap-3 items-start p-3 bg-muted/50 rounded-lg">
-              <div className="w-20">
-                <Label className="text-xs text-muted-foreground">Qty</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  value={item.quantity}
-                  onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
-                  className="mt-1"
-                />
+            <div key={item.id} className="p-3 bg-muted/50 rounded-lg space-y-2">
+              {savedItems.length > 0 && (
+                <div>
+                  <Label className="text-xs text-muted-foreground">Pick saved item (optional)</Label>
+                  <Select onValueChange={(v) => handlePickSaved(item.id, v)}>
+                    <SelectTrigger className="mt-1 h-9">
+                      <SelectValue placeholder="Select from saved items..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {savedItems.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.description} — ₹{s.price} / {s.unit}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="flex gap-2 items-start flex-wrap">
+                <div className="w-20">
+                  <Label className="text-xs text-muted-foreground">Qty</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={item.quantity}
+                    onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="w-24">
+                  <Label className="text-xs text-muted-foreground">Unit</Label>
+                  <Select
+                    value={item.unit || 'pcs'}
+                    onValueChange={(v) => updateItem(item.id, { unit: v })}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pcs">pcs</SelectItem>
+                      <SelectItem value="sq.in">sq.in</SelectItem>
+                      <SelectItem value="sq.ft">sq.ft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1 min-w-[160px]">
+                  <Label className="text-xs text-muted-foreground">Description</Label>
+                  <Input
+                    value={item.description}
+                    onChange={(e) => updateItem(item.id, { description: e.target.value })}
+                    onBlur={() => handleItemBlur(item)}
+                    placeholder="Item description"
+                    list={`saved-items-${item.id}`}
+                    className="mt-1"
+                  />
+                  <datalist id={`saved-items-${item.id}`}>
+                    {savedItems.map((s) => (
+                      <option key={s.id} value={s.description} />
+                    ))}
+                  </datalist>
+                </div>
+                <div className="w-28">
+                  <Label className="text-xs text-muted-foreground">Price (₹)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.price}
+                    onChange={(e) => updateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
+                    onBlur={() => handleItemBlur(item)}
+                    className="mt-1"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="mt-6 text-destructive hover:text-destructive"
+                  onClick={() => removeItem(item.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
-              <div className="flex-1">
-                <Label className="text-xs text-muted-foreground">Description</Label>
-                <Input
-                  value={item.description}
-                  onChange={(e) => updateItem(item.id, { description: e.target.value })}
-                  placeholder="Item description"
-                  className="mt-1"
-                />
-              </div>
-              <div className="w-28">
-                <Label className="text-xs text-muted-foreground">Price (₹)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item.price}
-                  onChange={(e) => updateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
-                  className="mt-1"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="mt-6 text-destructive hover:text-destructive"
-                onClick={() => removeItem(item.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
             </div>
           ))}
           
