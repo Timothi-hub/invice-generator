@@ -30,6 +30,7 @@ const getEmptyInvoice = (): InvoiceData => ({
   items: [],
   deliveryCharges: 0,
   designingCharges: 0,
+  discount: 0,
   expenses: 0,
   termsConditions: 'Payment due within 30 days.',
 });
@@ -74,6 +75,7 @@ const Dashboard = () => {
       items: savedInvoice.items,
       deliveryCharges: savedInvoice.deliveryCharges,
       designingCharges: savedInvoice.designingCharges,
+      discount: savedInvoice.discount || 0,
       expenses: savedInvoice.expenses,
       termsConditions: savedInvoice.termsConditions,
     });
@@ -120,8 +122,8 @@ const Dashboard = () => {
     directorName: 'Director Name',
   };
 
-  const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges);
-  const profit = calculateProfit(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.expenses);
+  const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
+  const profit = calculateProfit(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.expenses, invoice.discount);
 
   return (
     <AppLayout title="Invoices">

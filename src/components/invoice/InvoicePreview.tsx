@@ -17,7 +17,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
   template = invoiceTemplates[0]
 }, ref) => {
   const subtotal = calculateSubtotal(invoice.items);
-  const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges);
+  const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
   const profit = total - invoice.expenses;
 
   const formatCurrency = (amount: number) => {
@@ -171,6 +171,12 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                 <span className="text-muted-foreground">Designing Charges:</span>
                 <span className="font-medium">{formatCurrency(invoice.designingCharges)}</span>
               </div>
+              {invoice.discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Discount:</span>
+                  <span className="font-medium text-success">- {formatCurrency(invoice.discount)}</span>
+                </div>
+              )}
               <div className="border-t pt-2 flex justify-between">
                 <span className="font-semibold">Total:</span>
                 <span className="font-bold text-lg">{formatCurrency(total)}</span>
