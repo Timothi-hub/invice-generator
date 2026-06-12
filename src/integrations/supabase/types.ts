@@ -93,6 +93,7 @@ export type Database = {
           customer_name: string
           delivery_charges: number | null
           designing_charges: number | null
+          discount: number
           expenses: number | null
           id: string
           invoice_date: string
@@ -109,6 +110,7 @@ export type Database = {
           customer_name: string
           delivery_charges?: number | null
           designing_charges?: number | null
+          discount?: number
           expenses?: number | null
           id?: string
           invoice_date?: string
@@ -125,6 +127,7 @@ export type Database = {
           customer_name?: string
           delivery_charges?: number | null
           designing_charges?: number | null
+          discount?: number
           expenses?: number | null
           id?: string
           invoice_date?: string

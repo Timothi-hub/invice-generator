@@ -14,6 +14,7 @@ export interface InvoiceData {
   items: InvoiceItem[];
   deliveryCharges: number;
   designingCharges: number;
+  discount: number;
   expenses: number;
   termsConditions: string;
 }
@@ -34,16 +35,18 @@ export const calculateSubtotal = (items: InvoiceItem[]): number => {
 export const calculateTotal = (
   items: InvoiceItem[],
   deliveryCharges: number,
-  designingCharges: number
+  designingCharges: number,
+  discount: number = 0
 ): number => {
-  return calculateSubtotal(items) + deliveryCharges + designingCharges;
+  return calculateSubtotal(items) + deliveryCharges + designingCharges - discount;
 };
 
 export const calculateProfit = (
   items: InvoiceItem[],
   deliveryCharges: number,
   designingCharges: number,
-  expenses: number
+  expenses: number,
+  discount: number = 0
 ): number => {
-  return calculateTotal(items, deliveryCharges, designingCharges) - expenses;
+  return calculateTotal(items, deliveryCharges, designingCharges, discount) - expenses;
 };

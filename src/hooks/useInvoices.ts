@@ -44,6 +44,7 @@ export const useInvoices = () => {
         customerAddress: inv.customer_address || '',
         deliveryCharges: inv.delivery_charges || 0,
         designingCharges: inv.designing_charges || 0,
+        discount: (inv as any).discount || 0,
         expenses: inv.expenses || 0,
         termsConditions: inv.terms_conditions || '',
         createdAt: inv.created_at,
@@ -86,6 +87,7 @@ export const useInvoices = () => {
             customer_address: invoice.customerAddress,
             delivery_charges: invoice.deliveryCharges,
             designing_charges: invoice.designingCharges,
+            discount: invoice.discount || 0,
             expenses: invoice.expenses,
             terms_conditions: invoice.termsConditions,
           })
@@ -123,6 +125,7 @@ export const useInvoices = () => {
             customer_address: invoice.customerAddress,
             delivery_charges: invoice.deliveryCharges,
             designing_charges: invoice.designingCharges,
+            discount: invoice.discount || 0,
             expenses: invoice.expenses,
             terms_conditions: invoice.termsConditions,
           })

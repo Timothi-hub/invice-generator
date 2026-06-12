@@ -224,6 +224,18 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             />
           </div>
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="discount">Discount (₹)</Label>
+          <Input
+            id="discount"
+            type="number"
+            min="0"
+            step="0.01"
+            value={invoice.discount}
+            onChange={(e) => updateField('discount', parseFloat(e.target.value) || 0)}
+            placeholder="Discount amount to subtract from total"
+          />
+        </div>
       </div>
 
       {/* Expenses (for profit calculation) */}
