@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
 import { useCustomers, Customer } from '@/hooks/useCustomers';
@@ -36,6 +37,7 @@ const getEmptyInvoice = (): InvoiceData => ({
 });
 
 const Dashboard = () => {
+  const location = useLocation();
   const { profile, loading: profileLoading } = useProfile();
   const { invoices, loading: invoicesLoading, saveInvoice, deleteInvoice } = useInvoices();
   const { customers } = useCustomers();
@@ -45,6 +47,15 @@ const Dashboard = () => {
   const [invoice, setInvoice] = useState<InvoiceData>(getEmptyInvoice());
   const [isSaving, setIsSaving] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(invoiceTemplates[0]);
+
+  useEffect(() => {
+    const state = location.state as { invoiceId?: string } | null;
+    if (state?.invoiceId && invoices.length > 0) {
+      const found = invoices.find((i) => i.id === state.invoiceId);
+      if (found) handleSelectInvoice(found);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, invoices]);
 
   const handleSave = async () => {
     if (!invoice.invoiceNumber) {
