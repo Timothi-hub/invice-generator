@@ -109,6 +109,8 @@ export const useInvoices = () => {
               description: item.description,
               price: item.price,
               unit: item.unit || 'pcs',
+              width: item.width ?? null,
+              height: item.height ?? null,
             }))
           );
           if (itemsError) throw itemsError;
@@ -147,6 +149,8 @@ export const useInvoices = () => {
               description: item.description,
               price: item.price,
               unit: item.unit || 'pcs',
+              width: item.width ?? null,
+              height: item.height ?? null,
             }))
           );
           if (itemsError) throw itemsError;
