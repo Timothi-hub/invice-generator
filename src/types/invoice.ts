@@ -4,6 +4,8 @@ export interface InvoiceItem {
   description: string;
   price: number;
   unit?: string;
+  width?: number | null;
+  height?: number | null;
 }
 
 export interface InvoiceData {
