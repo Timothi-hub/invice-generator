@@ -125,9 +125,23 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
             {invoice.items.map((item, index) => (
               <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-muted/30'}>
                 <td className="py-3 px-4 text-foreground">
-                  {item.quantity}
-                  {item.unit && item.unit !== 'pcs' && (
-                    <span className="text-muted-foreground text-xs ml-1">{item.unit}</span>
+                  {item.width && item.height ? (
+                    <span>
+                      {item.width} × {item.height}
+                      {item.unit && item.unit !== 'pcs' && (
+                        <span className="text-muted-foreground text-xs ml-1">{item.unit}</span>
+                      )}
+                      <span className="block text-xs text-muted-foreground">
+                        = {item.quantity} {item.unit || ''}
+                      </span>
+                    </span>
+                  ) : (
+                    <>
+                      {item.quantity}
+                      {item.unit && item.unit !== 'pcs' && (
+                        <span className="text-muted-foreground text-xs ml-1">{item.unit}</span>
+                      )}
+                    </>
                   )}
                 </td>
                 <td className="py-3 px-4 text-foreground">{item.description}</td>

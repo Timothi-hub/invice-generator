@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,9 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
-import { Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Wand2 } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedItems } from '@/hooks/useSavedItems';
+import { useCustomers } from '@/hooks/useCustomers';
 
 interface InvoiceFormProps {
   invoice: InvoiceData;
@@ -23,8 +24,11 @@ interface InvoiceFormProps {
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   const { invoices } = useInvoices();
   const { items: savedItems, upsertItem } = useSavedItems();
+  const { customers } = useCustomers();
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateInvoice, setDuplicateInvoice] = useState<{ number: string; customerName: string } | null>(null);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const customerWrapperRef = useRef<HTMLDivElement>(null);
 
   // Check for duplicate invoice number
   useEffect(() => {
@@ -52,8 +56,47 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
     }
   }, [invoice.invoiceNumber, invoice.id, invoices]);
 
+  // Close customer suggestions when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (customerWrapperRef.current && !customerWrapperRef.current.contains(e.target as Node)) {
+        setShowCustomerSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const customerSuggestions = useMemo(() => {
+    const q = invoice.customerName.trim().toLowerCase();
+    if (!q) return [];
+    return customers
+      .filter((c) => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q)
+      .slice(0, 6);
+  }, [invoice.customerName, customers]);
+
   const updateField = <K extends keyof InvoiceData>(field: K, value: InvoiceData[K]) => {
     onChange({ ...invoice, [field]: value });
+  };
+
+  const generateNextInvoiceNumber = () => {
+    // Find pattern: optional prefix + number, e.g. INV-0001, INV001, 1, 0007
+    let prefix = 'INV-';
+    let maxNum = 0;
+    let pad = 4;
+    invoices.forEach((inv) => {
+      const m = inv.invoiceNumber.match(/^(.*?)(\d+)$/);
+      if (m) {
+        const num = parseInt(m[2], 10);
+        if (num > maxNum) {
+          maxNum = num;
+          prefix = m[1] || prefix;
+          pad = Math.max(pad, m[2].length);
+        }
+      }
+    });
+    const next = (maxNum + 1).toString().padStart(pad, '0');
+    updateField('invoiceNumber', `${prefix}${next}`);
   };
 
   const addItem = () => {
@@ -63,14 +106,23 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       description: '',
       price: 0,
       unit: 'pcs',
+      width: null,
+      height: null,
     };
     updateField('items', [...invoice.items, newItem]);
   };
 
   const updateItem = (id: string, updates: Partial<InvoiceItem>) => {
-    const updatedItems = invoice.items.map((item) =>
-      item.id === id ? { ...item, ...updates } : item
-    );
+    const updatedItems = invoice.items.map((item) => {
+      if (item.id !== id) return item;
+      const merged = { ...item, ...updates };
+      // Auto-calc quantity from width × height for area units
+      const unit = merged.unit || 'pcs';
+      if (unit !== 'pcs' && merged.width != null && merged.height != null && merged.width > 0 && merged.height > 0) {
+        merged.quantity = Number((merged.width * merged.height).toFixed(2));
+      }
+      return merged;
+    });
     updateField('items', updatedItems);
   };
 
@@ -100,13 +152,24 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
-            <Input
-              id="invoiceNumber"
-              value={invoice.invoiceNumber}
-              onChange={(e) => updateField('invoiceNumber', e.target.value)}
-              placeholder="INV-0001"
-              className={showDuplicateWarning ? 'border-warning focus-visible:ring-warning' : ''}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="invoiceNumber"
+                value={invoice.invoiceNumber}
+                onChange={(e) => updateField('invoiceNumber', e.target.value)}
+                placeholder="INV-0001"
+                className={showDuplicateWarning ? 'border-warning focus-visible:ring-warning' : ''}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={generateNextInvoiceNumber}
+                title="Auto-generate next invoice number"
+              >
+                <Wand2 className="w-4 h-4" />
+              </Button>
+            </div>
             {showDuplicateWarning && duplicateInvoice && (
               <div className="flex items-start gap-2 p-2 bg-warning/10 border border-warning/30 rounded-md text-warning text-sm">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
@@ -135,14 +198,43 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         <h3 className="font-semibold text-lg text-foreground">Customer Details</h3>
         
         <div className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-2 relative" ref={customerWrapperRef}>
             <Label htmlFor="customerName">Customer Name</Label>
             <Input
               id="customerName"
               value={invoice.customerName}
-              onChange={(e) => updateField('customerName', e.target.value)}
+              onChange={(e) => {
+                updateField('customerName', e.target.value);
+                setShowCustomerSuggestions(true);
+              }}
+              onFocus={() => setShowCustomerSuggestions(true)}
+              autoComplete="off"
               placeholder="Customer name"
             />
+            {showCustomerSuggestions && customerSuggestions.length > 0 && (
+              <div className="absolute z-20 mt-1 w-full bg-popover border rounded-md shadow-lg max-h-56 overflow-auto">
+                {customerSuggestions.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      onChange({
+                        ...invoice,
+                        customerName: c.name,
+                        customerAddress: c.address || invoice.customerAddress,
+                      });
+                      setShowCustomerSuggestions(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                  >
+                    <div className="font-medium">{c.name}</div>
+                    {c.address && (
+                      <div className="text-xs text-muted-foreground truncate">{c.address}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="customerAddress">Address</Label>
@@ -187,21 +279,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
               )}
               <div className="flex gap-2 items-start flex-wrap">
-                <div className="w-20">
-                  <Label className="text-xs text-muted-foreground">Qty</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
-                    className="mt-1"
-                  />
-                </div>
                 <div className="w-24">
                   <Label className="text-xs text-muted-foreground">Unit</Label>
                   <Select
                     value={item.unit || 'pcs'}
-                    onValueChange={(v) => updateItem(item.id, { unit: v })}
+                    onValueChange={(v) =>
+                      updateItem(item.id, {
+                        unit: v,
+                        ...(v === 'pcs' ? { width: null, height: null } : {}),
+                      })
+                    }
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -213,6 +300,59 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {item.unit && item.unit !== 'pcs' ? (
+                  <>
+                    <div className="w-16">
+                      <Label className="text-xs text-muted-foreground">W</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.width ?? ''}
+                        onChange={(e) =>
+                          updateItem(item.id, { width: e.target.value === '' ? null : parseFloat(e.target.value) })
+                        }
+                        className="mt-1"
+                        placeholder="W"
+                      />
+                    </div>
+                    <div className="w-16">
+                      <Label className="text-xs text-muted-foreground">H</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.height ?? ''}
+                        onChange={(e) =>
+                          updateItem(item.id, { height: e.target.value === '' ? null : parseFloat(e.target.value) })
+                        }
+                        className="mt-1"
+                        placeholder="H"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <Label className="text-xs text-muted-foreground">Total</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                        className="mt-1 bg-muted"
+                        readOnly={!!(item.width && item.height)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-20">
+                    <Label className="text-xs text-muted-foreground">Qty</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-[160px]">
                   <Label className="text-xs text-muted-foreground">Description</Label>
                   <Input
@@ -230,7 +370,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                   </datalist>
                 </div>
                 <div className="w-28">
-                  <Label className="text-xs text-muted-foreground">Price (₹)</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Price (₹{item.unit && item.unit !== 'pcs' ? `/${item.unit}` : ''})
+                  </Label>
                   <Input
                     type="number"
                     min="0"
