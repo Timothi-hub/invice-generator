@@ -279,21 +279,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
               )}
               <div className="flex gap-2 items-start flex-wrap">
-                <div className="w-20">
-                  <Label className="text-xs text-muted-foreground">Qty</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={item.quantity}
-                    onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
-                    className="mt-1"
-                  />
-                </div>
                 <div className="w-24">
                   <Label className="text-xs text-muted-foreground">Unit</Label>
                   <Select
                     value={item.unit || 'pcs'}
-                    onValueChange={(v) => updateItem(item.id, { unit: v })}
+                    onValueChange={(v) =>
+                      updateItem(item.id, {
+                        unit: v,
+                        ...(v === 'pcs' ? { width: null, height: null } : {}),
+                      })
+                    }
                   >
                     <SelectTrigger className="mt-1">
                       <SelectValue />
@@ -305,6 +300,59 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     </SelectContent>
                   </Select>
                 </div>
+                {item.unit && item.unit !== 'pcs' ? (
+                  <>
+                    <div className="w-16">
+                      <Label className="text-xs text-muted-foreground">W</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.width ?? ''}
+                        onChange={(e) =>
+                          updateItem(item.id, { width: e.target.value === '' ? null : parseFloat(e.target.value) })
+                        }
+                        className="mt-1"
+                        placeholder="W"
+                      />
+                    </div>
+                    <div className="w-16">
+                      <Label className="text-xs text-muted-foreground">H</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.height ?? ''}
+                        onChange={(e) =>
+                          updateItem(item.id, { height: e.target.value === '' ? null : parseFloat(e.target.value) })
+                        }
+                        className="mt-1"
+                        placeholder="H"
+                      />
+                    </div>
+                    <div className="w-20">
+                      <Label className="text-xs text-muted-foreground">Total</Label>
+                      <Input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, { quantity: parseFloat(e.target.value) || 0 })}
+                        className="mt-1 bg-muted"
+                        readOnly={!!(item.width && item.height)}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-20">
+                    <Label className="text-xs text-muted-foreground">Qty</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      value={item.quantity}
+                      onChange={(e) => updateItem(item.id, { quantity: parseInt(e.target.value) || 1 })}
+                      className="mt-1"
+                    />
+                  </div>
+                )}
                 <div className="flex-1 min-w-[160px]">
                   <Label className="text-xs text-muted-foreground">Description</Label>
                   <Input
@@ -322,7 +370,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                   </datalist>
                 </div>
                 <div className="w-28">
-                  <Label className="text-xs text-muted-foreground">Price (₹)</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Price (₹{item.unit && item.unit !== 'pcs' ? `/${item.unit}` : ''})
+                  </Label>
                   <Input
                     type="number"
                     min="0"
