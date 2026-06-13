@@ -57,6 +57,8 @@ export const useInvoices = () => {
             description: item.description,
             price: Number(item.price),
             unit: (item as any).unit || 'pcs',
+            width: (item as any).width != null ? Number((item as any).width) : null,
+            height: (item as any).height != null ? Number((item as any).height) : null,
           })),
       }));
 
