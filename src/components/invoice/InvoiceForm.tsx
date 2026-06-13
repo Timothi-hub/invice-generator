@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,9 +11,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
-import { Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Wand2 } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedItems } from '@/hooks/useSavedItems';
+import { useCustomers } from '@/hooks/useCustomers';
 
 interface InvoiceFormProps {
   invoice: InvoiceData;
@@ -23,8 +24,11 @@ interface InvoiceFormProps {
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   const { invoices } = useInvoices();
   const { items: savedItems, upsertItem } = useSavedItems();
+  const { customers } = useCustomers();
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [duplicateInvoice, setDuplicateInvoice] = useState<{ number: string; customerName: string } | null>(null);
+  const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
+  const customerWrapperRef = useRef<HTMLDivElement>(null);
 
   // Check for duplicate invoice number
   useEffect(() => {
@@ -52,8 +56,47 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
     }
   }, [invoice.invoiceNumber, invoice.id, invoices]);
 
+  // Close customer suggestions when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (customerWrapperRef.current && !customerWrapperRef.current.contains(e.target as Node)) {
+        setShowCustomerSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const customerSuggestions = useMemo(() => {
+    const q = invoice.customerName.trim().toLowerCase();
+    if (!q) return [];
+    return customers
+      .filter((c) => c.name.toLowerCase().includes(q) && c.name.toLowerCase() !== q)
+      .slice(0, 6);
+  }, [invoice.customerName, customers]);
+
   const updateField = <K extends keyof InvoiceData>(field: K, value: InvoiceData[K]) => {
     onChange({ ...invoice, [field]: value });
+  };
+
+  const generateNextInvoiceNumber = () => {
+    // Find pattern: optional prefix + number, e.g. INV-0001, INV001, 1, 0007
+    let prefix = 'INV-';
+    let maxNum = 0;
+    let pad = 4;
+    invoices.forEach((inv) => {
+      const m = inv.invoiceNumber.match(/^(.*?)(\d+)$/);
+      if (m) {
+        const num = parseInt(m[2], 10);
+        if (num > maxNum) {
+          maxNum = num;
+          prefix = m[1] || prefix;
+          pad = Math.max(pad, m[2].length);
+        }
+      }
+    });
+    const next = (maxNum + 1).toString().padStart(pad, '0');
+    updateField('invoiceNumber', `${prefix}${next}`);
   };
 
   const addItem = () => {
@@ -63,14 +106,23 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       description: '',
       price: 0,
       unit: 'pcs',
+      width: null,
+      height: null,
     };
     updateField('items', [...invoice.items, newItem]);
   };
 
   const updateItem = (id: string, updates: Partial<InvoiceItem>) => {
-    const updatedItems = invoice.items.map((item) =>
-      item.id === id ? { ...item, ...updates } : item
-    );
+    const updatedItems = invoice.items.map((item) => {
+      if (item.id !== id) return item;
+      const merged = { ...item, ...updates };
+      // Auto-calc quantity from width × height for area units
+      const unit = merged.unit || 'pcs';
+      if (unit !== 'pcs' && merged.width != null && merged.height != null && merged.width > 0 && merged.height > 0) {
+        merged.quantity = Number((merged.width * merged.height).toFixed(2));
+      }
+      return merged;
+    });
     updateField('items', updatedItems);
   };
 
