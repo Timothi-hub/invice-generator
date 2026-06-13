@@ -198,14 +198,43 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         <h3 className="font-semibold text-lg text-foreground">Customer Details</h3>
         
         <div className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-2 relative" ref={customerWrapperRef}>
             <Label htmlFor="customerName">Customer Name</Label>
             <Input
               id="customerName"
               value={invoice.customerName}
-              onChange={(e) => updateField('customerName', e.target.value)}
+              onChange={(e) => {
+                updateField('customerName', e.target.value);
+                setShowCustomerSuggestions(true);
+              }}
+              onFocus={() => setShowCustomerSuggestions(true)}
+              autoComplete="off"
               placeholder="Customer name"
             />
+            {showCustomerSuggestions && customerSuggestions.length > 0 && (
+              <div className="absolute z-20 mt-1 w-full bg-popover border rounded-md shadow-lg max-h-56 overflow-auto">
+                {customerSuggestions.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      onChange({
+                        ...invoice,
+                        customerName: c.name,
+                        customerAddress: c.address || invoice.customerAddress,
+                      });
+                      setShowCustomerSuggestions(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                  >
+                    <div className="font-medium">{c.name}</div>
+                    {c.address && (
+                      <div className="text-xs text-muted-foreground truncate">{c.address}</div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="customerAddress">Address</Label>
