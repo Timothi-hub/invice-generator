@@ -152,13 +152,24 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
-            <Input
-              id="invoiceNumber"
-              value={invoice.invoiceNumber}
-              onChange={(e) => updateField('invoiceNumber', e.target.value)}
-              placeholder="INV-0001"
-              className={showDuplicateWarning ? 'border-warning focus-visible:ring-warning' : ''}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="invoiceNumber"
+                value={invoice.invoiceNumber}
+                onChange={(e) => updateField('invoiceNumber', e.target.value)}
+                placeholder="INV-0001"
+                className={showDuplicateWarning ? 'border-warning focus-visible:ring-warning' : ''}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={generateNextInvoiceNumber}
+                title="Auto-generate next invoice number"
+              >
+                <Wand2 className="w-4 h-4" />
+              </Button>
+            </div>
             {showDuplicateWarning && duplicateInvoice && (
               <div className="flex items-start gap-2 p-2 bg-warning/10 border border-warning/30 rounded-md text-warning text-sm">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
