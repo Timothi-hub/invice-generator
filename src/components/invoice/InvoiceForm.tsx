@@ -11,10 +11,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
-import { Plus, Trash2, AlertTriangle, Wand2 } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Wand2, Check, ChevronsUpDown } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { useCustomers } from '@/hooks/useCustomers';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { cn } from '@/lib/utils';
 
 interface InvoiceFormProps {
   invoice: InvoiceData;
@@ -143,6 +153,51 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
     }
   };
 
+  const SavedItemPicker = ({ itemId }: { itemId: string }) => {
+    const [open, setOpen] = useState(false);
+    return (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            role="combobox"
+            className="mt-1 w-full justify-between h-9 font-normal"
+          >
+            <span className="text-muted-foreground">Select from saved items...</span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
+          <Command>
+            <CommandInput placeholder="Search saved items..." />
+            <CommandList>
+              <CommandEmpty>No items found.</CommandEmpty>
+              <CommandGroup>
+                {savedItems.map((s) => (
+                  <CommandItem
+                    key={s.id}
+                    value={`${s.description} ${s.unit}`}
+                    onSelect={() => {
+                      handlePickSaved(itemId, s.id);
+                      setOpen(false);
+                    }}
+                  >
+                    <Check className={cn('mr-2 h-4 w-4 opacity-0')} />
+                    <span className="flex-1 truncate">{s.description}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      ₹{s.price} / {s.unit}
+                    </span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Invoice Details */}
@@ -264,18 +319,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
               {savedItems.length > 0 && (
                 <div>
                   <Label className="text-xs text-muted-foreground">Pick saved item (optional)</Label>
-                  <Select onValueChange={(v) => handlePickSaved(item.id, v)}>
-                    <SelectTrigger className="mt-1 h-9">
-                      <SelectValue placeholder="Select from saved items..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {savedItems.map((s) => (
-                        <SelectItem key={s.id} value={s.id}>
-                          {s.description} — ₹{s.price} / {s.unit}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SavedItemPicker itemId={item.id} />
                 </div>
               )}
               <div className="flex gap-2 items-start flex-wrap">
