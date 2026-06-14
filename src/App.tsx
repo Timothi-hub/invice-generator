@@ -10,6 +10,7 @@ import CustomersPage from "./pages/CustomersPage";
 import ReportsPage from "./pages/ReportsPage";
 import DataPage from "./pages/DataPage";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
+import SavedItemsPage from "./pages/SavedItemsPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -63,6 +64,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <InvoiceHistoryPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/saved-items"
+              element={
+                <ProtectedRoute>
+                  <SavedItemsPage />
                 </ProtectedRoute>
               }
             />

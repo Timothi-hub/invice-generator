@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AppLayout } from '@/components/AppLayout';
+import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,14 +45,11 @@ const SavedItemsPage = () => {
   );
 
   return (
-    <AppLayout>
-      <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Saved Items</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your reusable items. These will appear in the invoice form for quick selection.
-          </p>
-        </div>
+    <AppLayout title="Saved Items">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <p className="text-sm text-muted-foreground">
+          Manage your reusable items. These will appear in the invoice form for quick selection.
+        </p>
 
         {/* Add form */}
         <form onSubmit={handleAdd} className="bg-card rounded-lg border p-4 space-y-4">

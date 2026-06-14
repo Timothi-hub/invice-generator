@@ -1,4 +1,4 @@
-import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History } from 'lucide-react';
+import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 const menuItems = [
   { title: 'Invoices', url: '/', icon: FileText },
   { title: 'Invoice History', url: '/history', icon: History },
+  { title: 'Saved Items', url: '/saved-items', icon: Package },
   { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Data', url: '/data', icon: Download },
