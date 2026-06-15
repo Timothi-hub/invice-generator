@@ -488,6 +488,21 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             placeholder="Discount amount to subtract from total"
           />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="advance">Advance Received (₹)</Label>
+          <Input
+            id="advance"
+            type="number"
+            min="0"
+            step="0.01"
+            value={invoice.advance}
+            onChange={(e) => updateField('advance', parseFloat(e.target.value) || 0)}
+            placeholder="Amount already paid by customer in advance"
+          />
+          <p className="text-xs text-muted-foreground">
+            This will be shown on the invoice and subtracted from the balance due.
+          </p>
+        </div>
       </div>
 
       {/* Expenses (for profit calculation) */}
