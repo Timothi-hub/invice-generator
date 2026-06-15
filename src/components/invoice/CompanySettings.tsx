@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CompanyProfile } from '@/types/invoice';
-import { Settings, Upload } from 'lucide-react';
+import { Settings, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CompanySettingsProps {
@@ -17,6 +17,26 @@ const CompanySettings: React.FC<CompanySettingsProps> = ({ profile, onSave }) =>
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<CompanyProfile>(profile);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+      toast.error('Please upload PNG or JPEG image');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo must be under 2MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      updateField('logoUrl', reader.result as string);
+      toast.success('Logo loaded. Click Save to apply.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -59,15 +79,38 @@ const CompanySettings: React.FC<CompanySettingsProps> = ({ profile, onSave }) =>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="logoUrl">Logo URL</Label>
-            <Input
-              id="logoUrl"
-              value={form.logoUrl || ''}
-              onChange={(e) => updateField('logoUrl', e.target.value)}
-              placeholder="https://example.com/logo.png"
+            <Label>Company Logo</Label>
+            {form.logoUrl && (
+              <div className="flex items-center gap-3 p-2 border rounded-md bg-muted/30">
+                <img src={form.logoUrl} alt="Logo preview" className="h-12 w-12 object-contain bg-white rounded" />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => updateField('logoUrl', '')}
+                >
+                  <X className="w-4 h-4 mr-1" /> Remove
+                </Button>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              className="hidden"
+              onChange={handleLogoUpload}
             />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {form.logoUrl ? 'Change Logo' : 'Upload Logo (PNG/JPEG)'}
+            </Button>
             <p className="text-xs text-muted-foreground">
-              Enter a URL to your company logo
+              PNG or JPEG, max 2MB
             </p>
           </div>
 

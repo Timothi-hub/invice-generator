@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, Menu, Save, Users } from 'lucide-react';
+import { FileText, Menu, Save, Users, FilePlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 const getEmptyInvoice = (): InvoiceData => ({
@@ -190,10 +190,16 @@ const Dashboard = () => {
             <h2 className="text-xl font-bold text-foreground">
               {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
             </h2>
-            <Button onClick={handleSave} disabled={isSaving}>
-              <Save className="w-4 h-4 mr-2" />
-              {isSaving ? 'Saving...' : currentInvoiceId ? 'Update' : 'Save'}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleNewInvoice}>
+                <FilePlus className="w-4 h-4 mr-2" />
+                New Invoice
+              </Button>
+              <Button onClick={handleSave} disabled={isSaving}>
+                <Save className="w-4 h-4 mr-2" />
+                {isSaving ? 'Saving...' : currentInvoiceId ? 'Update' : 'Save'}
+              </Button>
+            </div>
           </div>
 
           <InvoiceForm invoice={invoice} onChange={setInvoice} />
