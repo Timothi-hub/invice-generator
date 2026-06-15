@@ -31,6 +31,7 @@ const getEmptyInvoice = (): InvoiceData => ({
   deliveryCharges: 0,
   designingCharges: 0,
   discount: 0,
+  advance: 0,
   expenses: 0,
   termsConditions: 'Payment due within 30 days.',
 });
@@ -86,6 +87,7 @@ const Dashboard = () => {
       deliveryCharges: savedInvoice.deliveryCharges,
       designingCharges: savedInvoice.designingCharges,
       discount: savedInvoice.discount || 0,
+      advance: savedInvoice.advance || 0,
       expenses: savedInvoice.expenses,
       termsConditions: savedInvoice.termsConditions,
     });
