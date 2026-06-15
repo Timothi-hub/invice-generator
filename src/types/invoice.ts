@@ -18,6 +18,7 @@ export interface InvoiceData {
   deliveryCharges: number;
   designingCharges: number;
   discount: number;
+  advance: number;
   expenses: number;
   termsConditions: string;
 }

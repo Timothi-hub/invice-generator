@@ -96,6 +96,7 @@ export type Database = {
       }
       invoices: {
         Row: {
+          advance: number
           created_at: string
           customer_address: string | null
           customer_id: string | null
@@ -113,6 +114,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          advance?: number
           created_at?: string
           customer_address?: string | null
           customer_id?: string | null
@@ -130,6 +132,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          advance?: number
           created_at?: string
           customer_address?: string | null
           customer_id?: string | null

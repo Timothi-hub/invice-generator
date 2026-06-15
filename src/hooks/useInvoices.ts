@@ -45,6 +45,7 @@ export const useInvoices = () => {
         deliveryCharges: inv.delivery_charges || 0,
         designingCharges: inv.designing_charges || 0,
         discount: (inv as any).discount || 0,
+        advance: (inv as any).advance || 0,
         expenses: inv.expenses || 0,
         termsConditions: inv.terms_conditions || '',
         createdAt: inv.created_at,
@@ -91,6 +92,7 @@ export const useInvoices = () => {
             delivery_charges: invoice.deliveryCharges,
             designing_charges: invoice.designingCharges,
             discount: invoice.discount || 0,
+            advance: invoice.advance || 0,
             expenses: invoice.expenses,
             terms_conditions: invoice.termsConditions,
           })
@@ -132,6 +134,7 @@ export const useInvoices = () => {
             delivery_charges: invoice.deliveryCharges,
             designing_charges: invoice.designingCharges,
             discount: invoice.discount || 0,
+            advance: invoice.advance || 0,
             expenses: invoice.expenses,
             terms_conditions: invoice.termsConditions,
           })
