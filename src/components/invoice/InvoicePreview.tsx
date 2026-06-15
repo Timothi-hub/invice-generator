@@ -200,6 +200,18 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                 <span className="font-semibold">Total:</span>
                 <span className="font-bold text-lg">{formatCurrency(total)}</span>
               </div>
+              {invoice.advance > 0 && (
+                <>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Advance Paid:</span>
+                    <span className="font-medium text-success">- {formatCurrency(invoice.advance)}</span>
+                  </div>
+                  <div className="border-t pt-2 flex justify-between">
+                    <span className="font-semibold">Balance Due:</span>
+                    <span className="font-bold text-lg">{formatCurrency(total - invoice.advance)}</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
