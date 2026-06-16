@@ -1,27 +1,29 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { CompanyProfile } from '@/types/invoice';
 
 export const useProfile = () => {
   const { user } = useAuth();
+  const { activeOwnerId, isOwner } = useWorkspace();
   const [profile, setProfile] = useState<CompanyProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (user && activeOwnerId) {
       fetchProfile();
     }
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const fetchProfile = async () => {
-    if (!user) return;
+    if (!user || !activeOwnerId) return;
 
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('user_id', user.id)
-      .single();
+      .eq('user_id', activeOwnerId)
+      .maybeSingle();
 
     if (data) {
       setProfile({
@@ -32,12 +34,15 @@ export const useProfile = () => {
         website: data.website || '',
         directorName: data.director_name || '',
       });
+    } else {
+      setProfile(null);
     }
     setLoading(false);
   };
 
   const updateProfile = async (updates: Partial<CompanyProfile>) => {
     if (!user) return { error: new Error('Not authenticated') };
+    if (!isOwner) return { error: new Error('Only the account owner can edit company settings') };
 
     const { error } = await supabase
       .from('profiles')
@@ -59,5 +64,5 @@ export const useProfile = () => {
     return { error };
   };
 
-  return { profile, loading, updateProfile, refetch: fetchProfile };
+  return { profile, loading, updateProfile, refetch: fetchProfile, isOwner };
 };
