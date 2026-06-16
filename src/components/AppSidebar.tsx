@@ -1,6 +1,8 @@
-import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package } from 'lucide-react';
+import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
   SidebarContent,
@@ -24,10 +26,12 @@ const menuItems = [
   { title: 'Customers', url: '/customers', icon: Users },
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Data', url: '/data', icon: Download },
+  { title: 'Collaborators', url: '/members', icon: UserCog },
 ];
 
 export function AppSidebar() {
   const { signOut, user } = useAuth();
+  const { workspaces, activeOwnerId, setActiveOwnerId } = useWorkspace();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
 
@@ -53,6 +57,25 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {!collapsed && workspaces.length > 1 && (
+          <div className="px-3 pt-3">
+            <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
+              <Building2 className="w-3 h-3" /> Workspace
+            </p>
+            <Select value={activeOwnerId || ''} onValueChange={setActiveOwnerId}>
+              <SelectTrigger className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {workspaces.map((w) => (
+                  <SelectItem key={w.ownerId} value={w.ownerId}>
+                    {w.label}{!w.isOwn && ' (shared)'}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
