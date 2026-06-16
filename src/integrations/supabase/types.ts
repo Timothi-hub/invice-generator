@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_members: {
+        Row: {
+          created_at: string
+          id: string
+          member_email: string
+          member_user_id: string | null
+          owner_id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          member_email: string
+          member_user_id?: string | null
+          owner_id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          member_email?: string
+          member_user_id?: string | null
+          owner_id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -233,7 +263,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_access_account: { Args: { _owner: string }; Returns: boolean }
+      current_user_email: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
