@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
 import { toast } from 'sonner';
 
@@ -12,16 +13,18 @@ export interface SavedInvoice extends InvoiceData {
 
 export const useInvoices = () => {
   const { user } = useAuth();
+  const { activeOwnerId } = useWorkspace();
   const [invoices, setInvoices] = useState<SavedInvoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchInvoices = async () => {
-    if (!user) return;
+    if (!user || !activeOwnerId) return;
     
     try {
       const { data: invoicesData, error: invoicesError } = await supabase
         .from('invoices')
         .select('*')
+        .eq('user_id', activeOwnerId)
         .order('created_at', { ascending: false });
 
       if (invoicesError) throw invoicesError;
@@ -74,10 +77,10 @@ export const useInvoices = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const saveInvoice = async (invoice: InvoiceData, existingId?: string): Promise<string | null> => {
-    if (!user) return null;
+    if (!user || !activeOwnerId) return null;
 
     try {
       if (existingId) {
@@ -126,7 +129,7 @@ export const useInvoices = () => {
         const { data: newInvoice, error: insertError } = await supabase
           .from('invoices')
           .insert({
-            user_id: user.id,
+            user_id: activeOwnerId,
             invoice_number: invoice.invoiceNumber,
             invoice_date: invoice.invoiceDate,
             customer_name: invoice.customerName,
