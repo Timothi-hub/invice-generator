@@ -2,6 +2,8 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/s
 import { AppSidebar } from '@/components/AppSidebar';
 import { useProfile } from '@/hooks/useProfile';
 import CompanySettings from '@/components/invoice/CompanySettings';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { Badge } from '@/components/ui/badge';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,6 +12,8 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children, title }: AppLayoutProps) => {
   const { profile, updateProfile } = useProfile();
+  const { isOwner, workspaces, activeOwnerId } = useWorkspace();
+  const activeWs = workspaces.find((w) => w.ownerId === activeOwnerId);
 
   const defaultProfile = profile || {
     companyName: 'Your Company',
@@ -29,8 +33,11 @@ const AppLayout = ({ children, title }: AppLayoutProps) => {
               <div className="flex items-center gap-3">
                 <SidebarTrigger />
                 <h1 className="text-xl font-bold text-foreground">{title}</h1>
+                {activeWs && !activeWs.isOwn && (
+                  <Badge variant="secondary">Shared: {activeWs.label}</Badge>
+                )}
               </div>
-              <CompanySettings profile={defaultProfile} onSave={updateProfile} />
+              {isOwner && <CompanySettings profile={defaultProfile} onSave={updateProfile} />}
             </div>
           </header>
           <main className="p-4 md:p-6">{children}</main>
