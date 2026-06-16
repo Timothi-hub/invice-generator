@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { toast } from 'sonner';
 
 export interface Customer {
@@ -24,16 +25,18 @@ export interface CustomerInput {
 
 export const useCustomers = () => {
   const { user } = useAuth();
+  const { activeOwnerId } = useWorkspace();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCustomers = async () => {
-    if (!user) return;
+    if (!user || !activeOwnerId) return;
 
     try {
       const { data, error } = await supabase
         .from('customers')
         .select('*')
+        .eq('user_id', activeOwnerId)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -60,10 +63,10 @@ export const useCustomers = () => {
 
   useEffect(() => {
     fetchCustomers();
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   const saveCustomer = async (customer: CustomerInput, existingId?: string): Promise<string | null> => {
-    if (!user) return null;
+    if (!user || !activeOwnerId) return null;
 
     try {
       if (existingId) {
@@ -86,7 +89,7 @@ export const useCustomers = () => {
         const { data, error } = await supabase
           .from('customers')
           .insert({
-            user_id: user.id,
+            user_id: activeOwnerId,
             name: customer.name,
             address: customer.address || null,
             phone: customer.phone || null,
