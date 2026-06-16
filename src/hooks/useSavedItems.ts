@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
 
 export interface SavedItem {
   id: string;
@@ -11,14 +12,16 @@ export interface SavedItem {
 
 export const useSavedItems = () => {
   const { user } = useAuth();
+  const { activeOwnerId } = useWorkspace();
   const [items, setItems] = useState<SavedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchItems = useCallback(async () => {
-    if (!user) return;
+    if (!user || !activeOwnerId) return;
     const { data, error } = await (supabase as any)
       .from('saved_items')
       .select('id, description, price, unit')
+      .eq('user_id', activeOwnerId)
       .order('description', { ascending: true });
     if (!error && data) {
       setItems(
@@ -31,17 +34,17 @@ export const useSavedItems = () => {
       );
     }
     setLoading(false);
-  }, [user]);
+  }, [user, activeOwnerId]);
 
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
 
   const upsertItem = async (description: string, price: number, unit: string) => {
-    if (!user || !description.trim()) return;
+    if (!user || !activeOwnerId || !description.trim()) return;
     await (supabase as any).from('saved_items').upsert(
       {
-        user_id: user.id,
+        user_id: activeOwnerId,
         description: description.trim(),
         price,
         unit: unit || 'pcs',
