@@ -1,4 +1,4 @@
-import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2 } from 'lucide-react';
+import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2, Eye } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 
 const menuItems = [
   { title: 'Invoices', url: '/', icon: FileText },
+  { title: 'Preview Invoice', url: '/preview', icon: Eye, colorful: true },
   { title: 'Invoice History', url: '/history', icon: History },
   { title: 'Saved Items', url: '/saved-items', icon: Package },
   { title: 'Customers', url: '/customers', icon: Users },
@@ -86,8 +87,17 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === '/'}
-                      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-medium"
+                      className={
+                        item.colorful
+                          ? 'flex items-center gap-3 px-3 py-2 rounded-md text-white font-semibold shadow-md hover:shadow-lg hover:scale-[1.02] transition-all'
+                          : 'flex items-center gap-3 px-3 py-2 rounded-md hover:bg-muted/50 transition-colors'
+                      }
+                      style={
+                        item.colorful
+                          ? { background: 'linear-gradient(135deg, #0D4C5C 0%, #14b8a6 50%, #f59e0b 100%)' }
+                          : undefined
+                      }
+                      activeClassName={item.colorful ? 'ring-2 ring-offset-2 ring-amber-400' : 'bg-primary/10 text-primary font-medium'}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
