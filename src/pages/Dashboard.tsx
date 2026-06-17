@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
-import { useCustomers, Customer } from '@/hooks/useCustomers';
-import { InvoiceData } from '@/types/invoice';
+import { useCustomers } from '@/hooks/useCustomers';
 import { useDraftInvoice } from '@/contexts/DraftInvoiceContext';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
 import AppLayout from '@/components/AppLayout';
@@ -19,24 +18,10 @@ import {
 import { Eye, Save, Users, FilePlus } from 'lucide-react';
 import { toast } from 'sonner';
 
-const getEmptyInvoice = (): InvoiceData => ({
-  invoiceNumber: '',
-  invoiceDate: new Date().toISOString().split('T')[0],
-  customerName: '',
-  customerAddress: '',
-  items: [],
-  deliveryCharges: 0,
-  designingCharges: 0,
-  discount: 0,
-  advance: 0,
-  expenses: 0,
-  termsConditions: 'Payment due within 30 days.',
-});
-
 const Dashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { profile, loading: profileLoading } = useProfile();
+  const { loading: profileLoading } = useProfile();
   const { invoices, saveInvoice, deleteInvoice } = useInvoices();
   const { customers } = useCustomers();
   const { invoice, setInvoice, currentInvoiceId, setCurrentInvoiceId, resetInvoice } = useDraftInvoice();
