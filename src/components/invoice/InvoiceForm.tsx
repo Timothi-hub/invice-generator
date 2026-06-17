@@ -199,12 +199,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 md:space-y-6">
       {/* Invoice Details */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
-        <h3 className="font-semibold text-lg text-foreground">Invoice Details</h3>
-        
-        <div className="grid grid-cols-2 gap-4">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+        <h3 className="font-semibold text-base md:text-lg text-foreground">Invoice Details</h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
             <div className="flex gap-2">
@@ -249,8 +249,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       </div>
 
       {/* Customer Details */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
-        <h3 className="font-semibold text-lg text-foreground">Customer Details</h3>
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+        <h3 className="font-semibold text-base md:text-lg text-foreground">Customer Details</h3>
         
         <div className="space-y-4">
           <div className="space-y-2 relative" ref={customerWrapperRef}>
@@ -305,9 +305,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       </div>
 
       {/* Items */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-lg text-foreground">Items</h3>
+          <h3 className="font-semibold text-base md:text-lg text-foreground">Items</h3>
           <Button type="button" onClick={addItem} size="sm" variant="outline">
             <Plus className="w-4 h-4 mr-1" /> Add Item
           </Button>
@@ -315,15 +315,27 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
         <div className="space-y-3">
           {invoice.items.map((item, index) => (
-            <div key={item.id} className="p-3 bg-muted/50 rounded-lg space-y-2">
+            <div key={item.id} className="p-3 md:p-4 bg-muted/50 rounded-lg space-y-3 relative">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Item #{index + 1}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => removeItem(item.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
               {savedItems.length > 0 && (
                 <div>
                   <Label className="text-xs text-muted-foreground">Pick saved item (optional)</Label>
                   <SavedItemPicker itemId={item.id} />
                 </div>
               )}
-              <div className="flex gap-2 items-start flex-wrap">
-                <div className="w-24">
+              <div className="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-3 items-start">
+                <div className="col-span-1 sm:col-span-2">
                   <Label className="text-xs text-muted-foreground">Unit</Label>
                   <Select
                     value={item.unit || 'pcs'}
@@ -346,7 +358,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
                 {item.unit && item.unit !== 'pcs' ? (
                   <>
-                    <div className="w-16">
+                    <div className="col-span-1 sm:col-span-1">
                       <Label className="text-xs text-muted-foreground">W</Label>
                       <Input
                         type="number"
@@ -360,7 +372,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         placeholder="W"
                       />
                     </div>
-                    <div className="w-16">
+                    <div className="col-span-1 sm:col-span-1">
                       <Label className="text-xs text-muted-foreground">H</Label>
                       <Input
                         type="number"
@@ -374,7 +386,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         placeholder="H"
                       />
                     </div>
-                    <div className="w-20">
+                    <div className="col-span-2 sm:col-span-2">
                       <Label className="text-xs text-muted-foreground">Total</Label>
                       <Input
                         type="number"
@@ -386,7 +398,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="w-20">
+                  <div className="col-span-1 sm:col-span-2">
                     <Label className="text-xs text-muted-foreground">Qty</Label>
                     <Input
                       type="number"
@@ -397,7 +409,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     />
                   </div>
                 )}
-                <div className="flex-1 min-w-[160px]">
+                <div className="col-span-2 sm:col-span-5">
                   <Label className="text-xs text-muted-foreground">Description</Label>
                   <Input
                     value={item.description}
@@ -413,7 +425,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     ))}
                   </datalist>
                 </div>
-                <div className="w-28">
+                <div className="col-span-2 sm:col-span-3">
                   <Label className="text-xs text-muted-foreground">
                     Price (₹{item.unit && item.unit !== 'pcs' ? `/${item.unit}` : ''})
                   </Label>
@@ -427,15 +439,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     className="mt-1"
                   />
                 </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="mt-6 text-destructive hover:text-destructive"
-                  onClick={() => removeItem(item.id)}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
               </div>
             </div>
           ))}
@@ -449,10 +452,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       </div>
 
       {/* Additional Charges */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
-        <h3 className="font-semibold text-lg text-foreground">Additional Charges</h3>
-        
-        <div className="grid grid-cols-2 gap-4">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+        <h3 className="font-semibold text-base md:text-lg text-foreground">Additional Charges</h3>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryCharges">Delivery Charges (₹)</Label>
             <Input
@@ -476,6 +479,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             />
           </div>
         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="discount">Discount (₹)</Label>
           <Input
@@ -499,15 +503,16 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             onChange={(e) => updateField('advance', parseFloat(e.target.value) || 0)}
             placeholder="Amount already paid by customer in advance"
           />
-          <p className="text-xs text-muted-foreground">
+        </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
             This will be shown on the invoice and subtracted from the balance due.
           </p>
-        </div>
       </div>
 
       {/* Expenses (for profit calculation) */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
-        <h3 className="font-semibold text-lg text-foreground">Expenses & Profit Tracking</h3>
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+        <h3 className="font-semibold text-base md:text-lg text-foreground">Expenses & Profit Tracking</h3>
         <p className="text-sm text-muted-foreground">This is for your records only and won't appear on the invoice.</p>
         
         <div className="space-y-2">
@@ -525,8 +530,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       </div>
 
       {/* Terms */}
-      <div className="bg-card rounded-lg border p-4 space-y-4">
-        <h3 className="font-semibold text-lg text-foreground">Terms & Conditions</h3>
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+        <h3 className="font-semibold text-base md:text-lg text-foreground">Terms & Conditions</h3>
         
         <Textarea
           value={invoice.termsConditions}
