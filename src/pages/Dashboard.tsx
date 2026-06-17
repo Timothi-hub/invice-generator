@@ -1,14 +1,10 @@
-import { useRef, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useProfile } from '@/hooks/useProfile';
 import { useInvoices, SavedInvoice } from '@/hooks/useInvoices';
-import { useCustomers, Customer } from '@/hooks/useCustomers';
-import { InvoiceData, calculateTotal, calculateProfit } from '@/types/invoice';
-import { InvoiceTemplate, invoiceTemplates } from '@/types/invoiceTemplates';
+import { useCustomers } from '@/hooks/useCustomers';
+import { useDraftInvoice } from '@/contexts/DraftInvoiceContext';
 import InvoiceForm from '@/components/invoice/InvoiceForm';
-import InvoicePreview from '@/components/invoice/InvoicePreview';
-import ExportOptions from '@/components/invoice/ExportOptions';
-import TemplateSelector from '@/components/invoice/TemplateSelector';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,34 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, Menu, Save, Users, FilePlus } from 'lucide-react';
+import { Eye, Save, Users, FilePlus } from 'lucide-react';
 import { toast } from 'sonner';
-
-const getEmptyInvoice = (): InvoiceData => ({
-  invoiceNumber: '',
-  invoiceDate: new Date().toISOString().split('T')[0],
-  customerName: '',
-  customerAddress: '',
-  items: [],
-  deliveryCharges: 0,
-  designingCharges: 0,
-  discount: 0,
-  advance: 0,
-  expenses: 0,
-  termsConditions: 'Payment due within 30 days.',
-});
 
 const Dashboard = () => {
   const location = useLocation();
-  const { profile, loading: profileLoading } = useProfile();
+  const navigate = useNavigate();
+  const { loading: profileLoading } = useProfile();
   const { invoices, saveInvoice, deleteInvoice } = useInvoices();
   const { customers } = useCustomers();
-  const invoiceRef = useRef<HTMLDivElement>(null);
-  const [showMobilePreview, setShowMobilePreview] = useState(false);
-  const [currentInvoiceId, setCurrentInvoiceId] = useState<string | undefined>();
-  const [invoice, setInvoice] = useState<InvoiceData>(getEmptyInvoice());
+  const { invoice, setInvoice, currentInvoiceId, setCurrentInvoiceId, resetInvoice } = useDraftInvoice();
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplate>(invoiceTemplates[0]);
 
   useEffect(() => {
     const state = location.state as { invoiceId?: string } | null;
@@ -94,8 +73,7 @@ const Dashboard = () => {
   };
 
   const handleNewInvoice = () => {
-    setCurrentInvoiceId(undefined);
-    setInvoice(getEmptyInvoice());
+    resetInvoice();
   };
 
   const handleDeleteInvoice = async (id: string) => {
@@ -126,41 +104,10 @@ const Dashboard = () => {
     );
   }
 
-  const defaultProfile = profile || {
-    companyName: 'Your Company',
-    address: 'Your Address Here',
-    phone: '+91 XXXXX XXXXX',
-    website: 'www.yourcompany.com',
-    directorName: 'Director Name',
-  };
-
-  const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
-  const profit = calculateProfit(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.expenses, invoice.discount);
-
   return (
     <AppLayout title="Invoices">
-      {/* Mobile Toggle */}
-      <div className="lg:hidden mb-4">
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={() => setShowMobilePreview(!showMobilePreview)}
-        >
-          {showMobilePreview ? (
-            <>
-              <Menu className="w-4 h-4 mr-2" /> Show Form
-            </>
-          ) : (
-            <>
-              <FileText className="w-4 h-4 mr-2" /> Preview Invoice
-            </>
-          )}
-        </Button>
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Form Section */}
-        <div className={`space-y-4 ${showMobilePreview ? 'hidden lg:block' : ''}`}>
+      <div className="max-w-4xl mx-auto">
+        <div className="space-y-4">
           {/* Customer Selector */}
           {customers.length > 0 && (
             <Card>
@@ -188,7 +135,7 @@ const Dashboard = () => {
             </Card>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-xl font-bold text-foreground">
               {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
             </h2>
@@ -196,6 +143,10 @@ const Dashboard = () => {
               <Button variant="outline" onClick={handleNewInvoice}>
                 <FilePlus className="w-4 h-4 mr-2" />
                 New Invoice
+              </Button>
+              <Button variant="secondary" onClick={() => navigate('/preview')}>
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
               </Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 <Save className="w-4 h-4 mr-2" />
@@ -205,59 +156,6 @@ const Dashboard = () => {
           </div>
 
           <InvoiceForm invoice={invoice} onChange={setInvoice} />
-        </div>
-
-        {/* Preview Section */}
-        <div className={`space-y-4 ${!showMobilePreview ? 'hidden lg:block' : ''}`}>
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <h2 className="text-xl font-bold text-foreground">Preview</h2>
-            <TemplateSelector
-              selectedTemplate={selectedTemplate}
-              onSelectTemplate={setSelectedTemplate}
-            />
-          </div>
-
-          {/* Export Options */}
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-3 text-foreground">Export Options</h3>
-              <ExportOptions invoiceRef={invoiceRef} invoiceNumber={invoice.invoiceNumber || 'draft'} />
-            </CardContent>
-          </Card>
-
-          {/* Business Summary */}
-          <Card className="no-print">
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-3 text-foreground">Business Summary</h3>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">Total</p>
-                  <p className="text-xl font-bold text-foreground">₹{total.toFixed(2)}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-warning/10">
-                  <p className="text-sm text-warning">Expenses</p>
-                  <p className="text-xl font-bold text-warning">₹{invoice.expenses.toFixed(2)}</p>
-                </div>
-                <div className={`p-3 rounded-lg ${profit >= 0 ? 'bg-success/10' : 'bg-destructive/10'}`}>
-                  <p className={`text-sm ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>Profit</p>
-                  <p className={`text-xl font-bold ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                    ₹{profit.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Invoice Preview */}
-          <div className="overflow-auto rounded-lg border" style={{ maxHeight: '700px' }}>
-            <InvoicePreview
-              ref={invoiceRef}
-              invoice={invoice}
-              profile={defaultProfile}
-              showExpensesProfit={false}
-              template={selectedTemplate}
-            />
-          </div>
         </div>
       </div>
     </AppLayout>

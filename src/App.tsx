@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { DraftInvoiceProvider } from "@/contexts/DraftInvoiceContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import CustomersPage from "./pages/CustomersPage";
@@ -13,6 +14,7 @@ import DataPage from "./pages/DataPage";
 import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
 import SavedItemsPage from "./pages/SavedItemsPage";
 import MembersPage from "./pages/MembersPage";
+import PreviewPage from "./pages/PreviewPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -23,6 +25,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <WorkspaceProvider>
+      <DraftInvoiceProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
@@ -86,11 +89,20 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/preview"
+              element={
+                <ProtectedRoute>
+                  <PreviewPage />
+                </ProtectedRoute>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
+      </DraftInvoiceProvider>
       </WorkspaceProvider>
     </AuthProvider>
   </QueryClientProvider>
