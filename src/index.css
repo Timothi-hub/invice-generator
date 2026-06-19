@@ -227,6 +227,21 @@
       box-shadow: none !important;
       margin: 0 auto !important;
       max-width: 100% !important;
+      width: 100% !important;
+      min-height: auto !important;
+      transform: none !important;
+    }
+
+    /* Force the responsive scaling wrapper to render at natural size for print */
+    #invoice-print-root,
+    #invoice-print-root * {
+      page-break-inside: avoid;
+    }
+
+    /* Ensure tables/sections don't overflow paper width */
+    #invoice-print-root table {
+      width: 100% !important;
+      table-layout: auto;
     }
 
     /* Ensure colored backgrounds print correctly */
