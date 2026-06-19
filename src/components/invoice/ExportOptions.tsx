@@ -33,9 +33,21 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
           <style>
             @page { size: A4; margin: 10mm; }
             html, body { margin: 0; padding: 0; background: #fff; }
-            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
             .no-print { display: none !important; }
-            #invoice-print-root { box-shadow: none !important; margin: 0 auto !important; }
+            /* Force the invoice to exactly fill the printable A4 area and
+               avoid extra blank pages caused by inline 210mm width / 297mm min-height. */
+            #invoice-print-root {
+              box-shadow: none !important;
+              margin: 0 auto !important;
+              width: 190mm !important;        /* A4 width 210mm - 2 * 10mm margin */
+              max-width: 190mm !important;
+              min-height: 0 !important;
+              page-break-inside: auto;
+            }
+            #invoice-print-root img { max-width: 100%; height: auto; }
+            #invoice-print-root table { width: 100% !important; table-layout: auto; }
+            #invoice-print-root, #invoice-print-root * { overflow: visible !important; }
           </style>
         </head>
         <body>
