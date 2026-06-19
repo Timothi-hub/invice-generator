@@ -334,8 +334,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                   <SavedItemPicker itemId={item.id} />
                 </div>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-12 gap-2 sm:gap-3 items-start">
-                <div className="col-span-1 sm:col-span-2">
+              <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-3 items-start">
+                <div className="col-span-1 md:col-span-2 min-w-0">
                   <Label className="text-xs text-muted-foreground">Unit</Label>
                   <Select
                     value={item.unit || 'pcs'}
@@ -358,7 +358,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
                 {item.unit && item.unit !== 'pcs' ? (
                   <>
-                    <div className="col-span-1 sm:col-span-1">
+                    <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">W</Label>
                       <Input
                         type="number"
@@ -372,7 +372,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         placeholder="W"
                       />
                     </div>
-                    <div className="col-span-1 sm:col-span-1">
+                    <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">H</Label>
                       <Input
                         type="number"
@@ -386,7 +386,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         placeholder="H"
                       />
                     </div>
-                    <div className="col-span-2 sm:col-span-2">
+                    <div className="col-span-2 md:col-span-2 min-w-0">
                       <Label className="text-xs text-muted-foreground">Total</Label>
                       <Input
                         type="number"
@@ -398,7 +398,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     </div>
                   </>
                 ) : (
-                  <div className="col-span-1 sm:col-span-2">
+                  <div className="col-span-1 md:col-span-2 min-w-0">
                     <Label className="text-xs text-muted-foreground">Qty</Label>
                     <Input
                       type="number"
@@ -409,7 +409,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     />
                   </div>
                 )}
-                <div className="col-span-2 sm:col-span-5">
+                <div className="col-span-2 md:col-span-5 min-w-0">
                   <Label className="text-xs text-muted-foreground">Description</Label>
                   <Input
                     value={item.description}
@@ -425,7 +425,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     ))}
                   </datalist>
                 </div>
-                <div className="col-span-2 sm:col-span-3">
+                <div className="col-span-2 md:col-span-3 min-w-0">
                   <Label className="text-xs text-muted-foreground">
                     Price (₹{item.unit && item.unit !== 'pcs' ? `/${item.unit}` : ''})
                   </Label>
