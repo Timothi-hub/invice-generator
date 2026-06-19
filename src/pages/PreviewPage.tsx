@@ -5,6 +5,7 @@ import { useDraftInvoice } from '@/contexts/DraftInvoiceContext';
 import { calculateTotal, calculateProfit } from '@/types/invoice';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
+import ResponsiveInvoiceFrame from '@/components/invoice/ResponsiveInvoiceFrame';
 import TemplateSelector from '@/components/invoice/TemplateSelector';
 import { Card, CardContent } from '@/components/ui/card';
 import { Eye, Sparkles, TrendingUp, Wallet, Receipt } from 'lucide-react';
@@ -27,9 +28,9 @@ const PreviewPage = () => {
 
   return (
     <AppLayout title="Preview Invoice">
-      <div className="space-y-6">
+      <div className="space-y-4 md:space-y-6 max-w-full">
         {/* Colorful Hero */}
-        <div className="relative overflow-hidden rounded-2xl p-6 text-white shadow-xl"
+        <div className="relative overflow-hidden rounded-2xl p-4 md:p-6 text-white shadow-xl"
           style={{ background: 'linear-gradient(135deg, #0D4C5C 0%, #14b8a6 50%, #f59e0b 100%)' }}
         >
           <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
@@ -89,15 +90,17 @@ const PreviewPage = () => {
           </CardContent>
         </Card>
 
-        {/* Invoice Preview */}
-        <div className="overflow-auto rounded-lg border shadow-lg" style={{ maxHeight: '900px' }}>
-          <InvoicePreview
-            ref={invoiceRef}
-            invoice={invoice}
-            profile={defaultProfile}
-            showExpensesProfit={false}
-            template={selectedTemplate}
-          />
+        {/* Invoice Preview - scales to fit any viewport */}
+        <div className="rounded-lg border shadow-lg bg-white p-2 sm:p-4 overflow-hidden">
+          <ResponsiveInvoiceFrame>
+            <InvoicePreview
+              ref={invoiceRef}
+              invoice={invoice}
+              profile={defaultProfile}
+              showExpensesProfit={false}
+              template={selectedTemplate}
+            />
+          </ResponsiveInvoiceFrame>
         </div>
       </div>
     </AppLayout>
