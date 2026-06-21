@@ -1,19 +1,21 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
 import { useDraftInvoice } from '@/contexts/DraftInvoiceContext';
-import { calculateTotal, calculateProfit } from '@/types/invoice';
+import { calculateTotal, calculateProfit, calculateSubtotal } from '@/types/invoice';
 import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
 import ResponsiveInvoiceFrame from '@/components/invoice/ResponsiveInvoiceFrame';
 import TemplateSelector from '@/components/invoice/TemplateSelector';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Eye, Sparkles, TrendingUp, Wallet, Receipt } from 'lucide-react';
 
 const PreviewPage = () => {
   const { profile } = useProfile();
   const { invoice, selectedTemplate, setSelectedTemplate } = useDraftInvoice();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const [detail, setDetail] = useState<'total' | 'expenses' | 'profit' | null>(null);
 
   const defaultProfile = profile || {
     companyName: 'Your Company',
@@ -25,6 +27,60 @@ const PreviewPage = () => {
 
   const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
   const profit = calculateProfit(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.expenses, invoice.discount);
+  const subtotal = calculateSubtotal(invoice.items);
+  const fmt = (n: number) => `₹${n.toFixed(2)}`;
+
+  const detailContent = () => {
+    if (detail === 'total') {
+      return (
+        <div className="space-y-2 text-sm">
+          <Row label="Items subtotal" value={fmt(subtotal)} />
+          <Row label="Delivery charges" value={fmt(invoice.deliveryCharges)} />
+          <Row label="Designing charges" value={fmt(invoice.designingCharges)} />
+          {invoice.discount > 0 && <Row label="Discount" value={`- ${fmt(invoice.discount)}`} />}
+          <div className="border-t pt-2 flex justify-between font-bold text-base">
+            <span>Total</span><span>{fmt(total)}</span>
+          </div>
+          {invoice.advance > 0 && (
+            <>
+              <Row label="Advance paid" value={`- ${fmt(invoice.advance)}`} />
+              <div className="border-t pt-2 flex justify-between font-semibold">
+                <span>Balance due</span><span>{fmt(total - invoice.advance)}</span>
+              </div>
+            </>
+          )}
+        </div>
+      );
+    }
+    if (detail === 'expenses') {
+      return (
+        <div className="space-y-2 text-sm">
+          <Row label="Recorded expenses" value={fmt(invoice.expenses)} />
+          <p className="text-muted-foreground text-xs pt-2">
+            This is the total cost you entered for this invoice. It is deducted from the total to calculate profit and is not shown in the exported invoice.
+          </p>
+        </div>
+      );
+    }
+    if (detail === 'profit') {
+      return (
+        <div className="space-y-2 text-sm">
+          <Row label="Total billed" value={fmt(total)} />
+          <Row label="Expenses" value={`- ${fmt(invoice.expenses)}`} />
+          <div className="border-t pt-2 flex justify-between font-bold text-base">
+            <span>Profit</span>
+            <span className={profit >= 0 ? 'text-success' : 'text-destructive'}>{fmt(profit)}</span>
+          </div>
+          {total > 0 && (
+            <p className="text-muted-foreground text-xs pt-2">
+              Margin: {((profit / total) * 100).toFixed(1)}%
+            </p>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
     <AppLayout title="Preview Invoice">
@@ -71,21 +127,24 @@ const PreviewPage = () => {
           <CardContent className="p-4">
             <h3 className="font-semibold mb-3 text-foreground">Business Summary</h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <div className="p-4 rounded-xl text-white shadow-md" style={{ background: 'linear-gradient(135deg, #0D4C5C, #14b8a6)' }}>
+              <button type="button" onClick={() => setDetail('total')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #0D4C5C, #14b8a6)' }}>
                 <TrendingUp className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90">Total</p>
-                <p className="text-2xl font-bold">₹{total.toFixed(2)}</p>
-              </div>
-              <div className="p-4 rounded-xl text-white shadow-md" style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
+                <p className="text-sm opacity-90 text-center">Total</p>
+                <p className="text-2xl font-bold text-center">₹{total.toFixed(2)}</p>
+                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
+              </button>
+              <button type="button" onClick={() => setDetail('expenses')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
                 <Wallet className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90">Expenses</p>
-                <p className="text-2xl font-bold">₹{invoice.expenses.toFixed(2)}</p>
-              </div>
-              <div className="p-4 rounded-xl text-white shadow-md" style={{ background: profit >= 0 ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
+                <p className="text-sm opacity-90 text-center">Expenses</p>
+                <p className="text-2xl font-bold text-center">₹{invoice.expenses.toFixed(2)}</p>
+                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
+              </button>
+              <button type="button" onClick={() => setDetail('profit')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: profit >= 0 ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
                 <Sparkles className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90">Profit</p>
-                <p className="text-2xl font-bold">₹{profit.toFixed(2)}</p>
-              </div>
+                <p className="text-sm opacity-90 text-center">Profit</p>
+                <p className="text-2xl font-bold text-center">₹{profit.toFixed(2)}</p>
+                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
+              </button>
             </div>
           </CardContent>
         </Card>
@@ -102,9 +161,26 @@ const PreviewPage = () => {
             />
           </ResponsiveInvoiceFrame>
         </div>
+
+        <Dialog open={detail !== null} onOpenChange={(o) => !o && setDetail(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="capitalize">{detail} breakdown</DialogTitle>
+              <DialogDescription>How this number was calculated for invoice {invoice.invoiceNumber || 'draft'}.</DialogDescription>
+            </DialogHeader>
+            {detailContent()}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
 };
+
+const Row = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex justify-between">
+    <span className="text-muted-foreground">{label}</span>
+    <span className="font-medium">{value}</span>
+  </div>
+);
 
 export default PreviewPage;
