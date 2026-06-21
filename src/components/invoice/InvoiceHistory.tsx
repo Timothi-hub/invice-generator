@@ -3,9 +3,16 @@ import { SavedInvoice } from '@/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, Plus, FileText, Search } from 'lucide-react';
+import { Edit, Trash2, Plus, FileText, Search, ArrowUpDown, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { calculateTotal } from '@/types/invoice';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,16 +43,52 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
   selectedId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date_desc' | 'date_asc' | 'number_asc' | 'number_desc' | 'name_asc' | 'name_desc'>('date_desc');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
 
   const filteredInvoices = useMemo(() => {
-    if (!searchQuery.trim()) return invoices;
-    const query = searchQuery.toLowerCase();
-    return invoices.filter(
-      (inv) =>
-        inv.invoiceNumber.toLowerCase().includes(query) ||
-        inv.customerName.toLowerCase().includes(query)
-    );
-  }, [invoices, searchQuery]);
+    let result = [...invoices];
+
+    const query = searchQuery.trim().toLowerCase();
+    if (query) {
+      result = result.filter(
+        (inv) =>
+          inv.invoiceNumber.toLowerCase().includes(query) ||
+          inv.customerName.toLowerCase().includes(query),
+      );
+    }
+
+    if (fromDate) {
+      const from = new Date(fromDate).getTime();
+      result = result.filter((inv) => new Date(inv.invoiceDate).getTime() >= from);
+    }
+    if (toDate) {
+      const to = new Date(toDate).getTime();
+      result = result.filter((inv) => new Date(inv.invoiceDate).getTime() <= to);
+    }
+
+    const cmp = (a: SavedInvoice, b: SavedInvoice) => {
+      switch (sortBy) {
+        case 'date_asc':
+          return new Date(a.invoiceDate).getTime() - new Date(b.invoiceDate).getTime();
+        case 'date_desc':
+          return new Date(b.invoiceDate).getTime() - new Date(a.invoiceDate).getTime();
+        case 'number_asc':
+          return a.invoiceNumber.localeCompare(b.invoiceNumber, undefined, { numeric: true });
+        case 'number_desc':
+          return b.invoiceNumber.localeCompare(a.invoiceNumber, undefined, { numeric: true });
+        case 'name_asc':
+          return a.customerName.localeCompare(b.customerName);
+        case 'name_desc':
+          return b.customerName.localeCompare(a.customerName);
+      }
+    };
+    result.sort(cmp);
+    return result;
+  }, [invoices, searchQuery, sortBy, fromDate, toDate]);
+
+  const hasFilters = searchQuery || fromDate || toDate;
 
   if (loading) {
     return (
@@ -80,9 +123,52 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
             className="pl-9"
           />
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">From</label>
+            <Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">To</label>
+            <Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <ArrowUpDown className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+            <SelectTrigger className="flex-1">
+              <SelectValue placeholder="Sort by..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date_desc">Date — Newest first</SelectItem>
+              <SelectItem value="date_asc">Date — Oldest first</SelectItem>
+              <SelectItem value="number_desc">Invoice # — High to low</SelectItem>
+              <SelectItem value="number_asc">Invoice # — Low to high</SelectItem>
+              <SelectItem value="name_asc">Customer name — A → Z</SelectItem>
+              <SelectItem value="name_desc">Customer name — Z → A</SelectItem>
+            </SelectContent>
+          </Select>
+          {hasFilters && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 shrink-0"
+              onClick={() => {
+                setSearchQuery('');
+                setFromDate('');
+                setToDate('');
+              }}
+              title="Clear filters"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
-      <ScrollArea className="h-[300px]">
+      <ScrollArea className="h-[360px]">
         {filteredInvoices.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
