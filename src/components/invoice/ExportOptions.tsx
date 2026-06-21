@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Printer, FileText, Image } from 'lucide-react';
+import { Printer, FileText, Image, Maximize2, Minimize2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { toast } from 'sonner';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface ExportOptionsProps {
   invoiceRef: React.RefObject<HTMLDivElement>;
@@ -10,6 +13,8 @@ interface ExportOptionsProps {
 }
 
 const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber }) => {
+  const [fitOnePage, setFitOnePage] = useState(true);
+
   const handlePrint = () => {
     if (!invoiceRef.current) return;
 
@@ -21,6 +26,34 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
     }
 
     const invoiceHtml = invoiceRef.current.outerHTML;
+
+    const fitStyles = fitOnePage
+      ? `
+        html, body { height: auto; }
+        #invoice-print-root {
+          box-shadow: none !important;
+          margin: 0 auto !important;
+          width: 190mm !important;
+          max-width: 190mm !important;
+          max-height: 277mm !important;  /* A4 height 297mm - 2 * 10mm margin */
+          min-height: 0 !important;
+          overflow: hidden !important;
+          page-break-inside: avoid !important;
+          page-break-after: avoid !important;
+          break-inside: avoid !important;
+        }
+        #invoice-print-root * { page-break-inside: avoid !important; break-inside: avoid !important; }
+      `
+      : `
+        #invoice-print-root {
+          box-shadow: none !important;
+          margin: 0 auto !important;
+          width: 190mm !important;
+          max-width: 190mm !important;
+          min-height: 0 !important;
+          page-break-inside: auto;
+        }
+      `;
 
     printWindow.document.open();
     printWindow.document.write(`
@@ -35,28 +68,36 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
             html, body { margin: 0; padding: 0; background: #fff; }
             * { -webkit-print-color-adjust: exact; print-color-adjust: exact; box-sizing: border-box; }
             .no-print { display: none !important; }
-            /* Force the invoice to exactly fill the printable A4 area and
-               avoid extra blank pages caused by inline 210mm width / 297mm min-height. */
-            #invoice-print-root {
-              box-shadow: none !important;
-              margin: 0 auto !important;
-              width: 190mm !important;        /* A4 width 210mm - 2 * 10mm margin */
-              max-width: 190mm !important;
-              min-height: 0 !important;
-              page-break-inside: auto;
-            }
+            ${fitStyles}
             #invoice-print-root img { max-width: 100%; height: auto; }
             #invoice-print-root table { width: 100% !important; table-layout: auto; }
-            #invoice-print-root, #invoice-print-root * { overflow: visible !important; }
           </style>
         </head>
         <body>
-          ${invoiceHtml}
+          <div id="print-wrapper">${invoiceHtml}</div>
           <script>
             window.onload = () => {
+              const fit = ${fitOnePage ? 'true' : 'false'};
+              const root = document.getElementById('invoice-print-root');
+              if (fit && root) {
+                // Scale invoice down so it fits within a single A4 page.
+                const mmToPx = 96 / 25.4;
+                const maxW = 190 * mmToPx;
+                const maxH = 277 * mmToPx;
+                const w = root.scrollWidth;
+                const h = root.scrollHeight;
+                const scale = Math.min(1, maxW / w, maxH / h);
+                if (scale < 1) {
+                  root.style.transformOrigin = 'top left';
+                  root.style.transform = 'scale(' + scale + ')';
+                  root.style.width = w + 'px';
+                }
+              }
               window.focus();
-              window.print();
-              window.onafterprint = () => window.close();
+              setTimeout(() => {
+                window.print();
+                window.onafterprint = () => window.close();
+              }, 150);
             };
           </script>
         </body>
@@ -138,19 +179,30 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
   };
 
   return (
-    <div className="flex gap-3">
-      <Button onClick={handlePrint} variant="outline" className="flex-1">
-        <Printer className="w-4 h-4 mr-2" />
-        Print
-      </Button>
-      <Button onClick={handleExportPDF} variant="outline" className="flex-1">
-        <FileText className="w-4 h-4 mr-2" />
-        PDF
-      </Button>
-      <Button onClick={handleExportJPEG} variant="outline" className="flex-1">
-        <Image className="w-4 h-4 mr-2" />
-        JPEG
-      </Button>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-muted/50 border">
+        <div className="flex items-center gap-2 text-sm">
+          {fitOnePage ? <Minimize2 className="w-4 h-4 text-primary" /> : <Maximize2 className="w-4 h-4 text-primary" />}
+          <Label htmlFor="fit-toggle" className="cursor-pointer">
+            {fitOnePage ? 'Fit to one page' : 'Full size print'}
+          </Label>
+        </div>
+        <Switch id="fit-toggle" checked={fitOnePage} onCheckedChange={setFitOnePage} />
+      </div>
+      <div className="flex gap-3 flex-wrap sm:flex-nowrap">
+        <Button onClick={handlePrint} variant="outline" className="flex-1 min-w-[110px]">
+          <Printer className="w-4 h-4 mr-2" />
+          Print
+        </Button>
+        <Button onClick={handleExportPDF} variant="outline" className="flex-1 min-w-[110px]">
+          <FileText className="w-4 h-4 mr-2" />
+          PDF
+        </Button>
+        <Button onClick={handleExportJPEG} variant="outline" className="flex-1 min-w-[110px]">
+          <Image className="w-4 h-4 mr-2" />
+          JPEG
+        </Button>
+      </div>
     </div>
   );
 };
