@@ -119,6 +119,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       width: null,
       height: null,
       pieces: 1,
+      mrp: null,
+      taxRate: 0,
     };
     updateField('items', [...invoice.items, newItem]);
   };
@@ -144,14 +146,29 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
   const handleItemBlur = (item: InvoiceItem) => {
     if (item.description.trim() && item.price > 0) {
-      upsertItem(item.description, item.price, item.unit || 'pcs');
+      upsertItem(item.description, item.price, item.unit || 'pcs', {
+        width: item.width ?? null,
+        height: item.height ?? null,
+        pieces: item.pieces ?? null,
+        mrp: item.mrp ?? null,
+        taxRate: item.taxRate ?? 0,
+      });
     }
   };
 
   const handlePickSaved = (id: string, savedId: string) => {
     const s = savedItems.find((x) => x.id === savedId);
     if (s) {
-      updateItem(id, { description: s.description, price: s.price, unit: s.unit });
+      updateItem(id, {
+        description: s.description,
+        price: s.price,
+        unit: s.unit,
+        width: s.width ?? null,
+        height: s.height ?? null,
+        pieces: s.pieces ?? 1,
+        mrp: s.mrp ?? null,
+        taxRate: s.taxRate ?? 0,
+      });
     }
   };
 
@@ -186,9 +203,17 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     }}
                   >
                     <Check className={cn('mr-2 h-4 w-4 opacity-0')} />
-                    <span className="flex-1 truncate">{s.description}</span>
+                    <span className="flex-1 truncate">
+                      {s.description}
+                      {s.width && s.height ? (
+                        <span className="text-xs text-muted-foreground ml-1">
+                          ({s.width}×{s.height}{s.pieces && s.pieces > 1 ? `×${s.pieces}` : ''})
+                        </span>
+                      ) : null}
+                    </span>
                     <span className="text-xs text-muted-foreground ml-2">
-                      ₹{s.price} / {s.unit}
+                      ₹{s.price}/{s.unit}
+                      {s.taxRate ? ` +${s.taxRate}%` : ''}
                     </span>
                   </CommandItem>
                 ))}
