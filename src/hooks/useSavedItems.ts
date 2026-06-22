@@ -8,6 +8,11 @@ export interface SavedItem {
   description: string;
   price: number;
   unit: string;
+  width?: number | null;
+  height?: number | null;
+  pieces?: number | null;
+  mrp?: number | null;
+  taxRate?: number | null;
 }
 
 export const useSavedItems = () => {
@@ -20,7 +25,7 @@ export const useSavedItems = () => {
     if (!user || !activeOwnerId) return;
     const { data, error } = await (supabase as any)
       .from('saved_items')
-      .select('id, description, price, unit')
+      .select('id, description, price, unit, width, height, pieces, mrp, tax_rate')
       .eq('user_id', activeOwnerId)
       .order('description', { ascending: true });
     if (!error && data) {
@@ -30,6 +35,11 @@ export const useSavedItems = () => {
           description: d.description,
           price: Number(d.price),
           unit: d.unit || 'pcs',
+          width: d.width != null ? Number(d.width) : null,
+          height: d.height != null ? Number(d.height) : null,
+          pieces: d.pieces != null ? Number(d.pieces) : null,
+          mrp: d.mrp != null ? Number(d.mrp) : null,
+          taxRate: d.tax_rate != null ? Number(d.tax_rate) : 0,
         }))
       );
     }
@@ -40,7 +50,18 @@ export const useSavedItems = () => {
     fetchItems();
   }, [fetchItems]);
 
-  const upsertItem = async (description: string, price: number, unit: string) => {
+  const upsertItem = async (
+    description: string,
+    price: number,
+    unit: string,
+    extra?: {
+      width?: number | null;
+      height?: number | null;
+      pieces?: number | null;
+      mrp?: number | null;
+      taxRate?: number | null;
+    }
+  ) => {
     if (!user || !activeOwnerId || !description.trim()) return;
     await (supabase as any).from('saved_items').upsert(
       {
@@ -48,6 +69,11 @@ export const useSavedItems = () => {
         description: description.trim(),
         price,
         unit: unit || 'pcs',
+        width: extra?.width ?? null,
+        height: extra?.height ?? null,
+        pieces: extra?.pieces ?? null,
+        mrp: extra?.mrp ?? null,
+        tax_rate: extra?.taxRate ?? 0,
       },
       { onConflict: 'user_id,description' }
     );
