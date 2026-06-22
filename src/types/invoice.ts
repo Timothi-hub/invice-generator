@@ -6,6 +6,7 @@ export interface InvoiceItem {
   unit?: string;
   width?: number | null;
   height?: number | null;
+  pieces?: number | null;
 }
 
 export interface InvoiceData {

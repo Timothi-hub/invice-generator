@@ -118,6 +118,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       unit: 'pcs',
       width: null,
       height: null,
+      pieces: 1,
     };
     updateField('items', [...invoice.items, newItem]);
   };
@@ -129,7 +130,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       // Auto-calc quantity from width × height for area units
       const unit = merged.unit || 'pcs';
       if (unit !== 'pcs' && merged.width != null && merged.height != null && merged.width > 0 && merged.height > 0) {
-        merged.quantity = Number((merged.width * merged.height).toFixed(2));
+        const pcs = merged.pieces && merged.pieces > 0 ? merged.pieces : 1;
+        merged.quantity = Number((merged.width * merged.height * pcs).toFixed(2));
       }
       return merged;
     });
@@ -384,6 +386,20 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         }
                         className="mt-1"
                         placeholder="H"
+                      />
+                    </div>
+                    <div className="col-span-1 md:col-span-1 min-w-0">
+                      <Label className="text-xs text-muted-foreground">Qty</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={item.pieces ?? 1}
+                        onChange={(e) =>
+                          updateItem(item.id, { pieces: e.target.value === '' ? 1 : parseInt(e.target.value) || 1 })
+                        }
+                        className="mt-1"
+                        placeholder="Qty"
                       />
                     </div>
                     <div className="col-span-2 md:col-span-2 min-w-0">

@@ -131,6 +131,9 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                       {item.unit && item.unit !== 'pcs' && (
                         <span className="text-muted-foreground text-xs ml-1">{item.unit}</span>
                       )}
+                      {item.pieces && item.pieces > 1 && (
+                        <span className="ml-1">× {item.pieces} pcs</span>
+                      )}
                       <span className="block text-xs text-muted-foreground">
                         = {item.quantity} {item.unit || ''}
                       </span>
