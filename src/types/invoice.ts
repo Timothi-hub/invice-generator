@@ -7,6 +7,8 @@ export interface InvoiceItem {
   width?: number | null;
   height?: number | null;
   pieces?: number | null;
+  mrp?: number | null;
+  taxRate?: number | null;
 }
 
 export interface InvoiceData {
@@ -37,13 +39,26 @@ export const calculateSubtotal = (items: InvoiceItem[]): number => {
   return items.reduce((sum, item) => sum + item.quantity * item.price, 0);
 };
 
+export const calculateTax = (items: InvoiceItem[]): number => {
+  return items.reduce((sum, item) => {
+    const rate = item.taxRate || 0;
+    return sum + item.quantity * item.price * (rate / 100);
+  }, 0);
+};
+
 export const calculateTotal = (
   items: InvoiceItem[],
   deliveryCharges: number,
   designingCharges: number,
   discount: number = 0
 ): number => {
-  return calculateSubtotal(items) + deliveryCharges + designingCharges - discount;
+  return (
+    calculateSubtotal(items) +
+    calculateTax(items) +
+    deliveryCharges +
+    designingCharges -
+    discount
+  );
 };
 
 export const calculateProfit = (
