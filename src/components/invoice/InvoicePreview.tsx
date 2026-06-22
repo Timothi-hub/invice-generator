@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { CompanyProfile, InvoiceData, calculateSubtotal, calculateTotal } from '@/types/invoice';
+import { CompanyProfile, InvoiceData, calculateSubtotal, calculateTotal, calculateTax } from '@/types/invoice';
 import { InvoiceTemplate, invoiceTemplates } from '@/types/invoiceTemplates';
 import { FileText } from 'lucide-react';
 
@@ -17,6 +17,7 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
   template = invoiceTemplates[0]
 }, ref) => {
   const subtotal = calculateSubtotal(invoice.items);
+  const tax = calculateTax(invoice.items);
   const total = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
   const profit = total - invoice.expenses;
 
@@ -148,9 +149,19 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                   )}
                 </td>
                 <td className="py-3 px-4 text-foreground">{item.description}</td>
-                <td className="py-3 px-4 text-right text-foreground">{formatCurrency(item.price)}</td>
+                <td className="py-3 px-4 text-right text-foreground">
+                  {item.mrp && item.mrp > item.price ? (
+                    <span className="text-xs text-muted-foreground line-through mr-1">
+                      {formatCurrency(item.mrp)}
+                    </span>
+                  ) : null}
+                  {formatCurrency(item.price)}
+                  {item.taxRate ? (
+                    <span className="block text-xs text-muted-foreground">+{item.taxRate}% tax</span>
+                  ) : null}
+                </td>
                 <td className="py-3 px-4 text-right font-medium text-foreground">
-                  {formatCurrency(item.quantity * item.price)}
+                  {formatCurrency(item.quantity * item.price * (1 + (item.taxRate || 0) / 100))}
                 </td>
               </tr>
             ))}
@@ -185,6 +196,12 @@ const InvoicePreview = forwardRef<HTMLDivElement, InvoicePreviewProps>(({
                 <span className="text-muted-foreground">Sub Total:</span>
                 <span className="font-medium">{formatCurrency(subtotal)}</span>
               </div>
+              {tax > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tax:</span>
+                  <span className="font-medium">{formatCurrency(tax)}</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Delivery Charges:</span>
                 <span className="font-medium">{formatCurrency(invoice.deliveryCharges)}</span>
