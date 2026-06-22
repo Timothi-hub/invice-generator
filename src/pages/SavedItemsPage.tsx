@@ -19,6 +19,11 @@ const SavedItemsPage = () => {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [unit, setUnit] = useState('pcs');
+  const [width, setWidth] = useState('');
+  const [height, setHeight] = useState('');
+  const [pieces, setPieces] = useState('');
+  const [mrp, setMrp] = useState('');
+  const [taxRate, setTaxRate] = useState('');
   const [search, setSearch] = useState('');
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -27,11 +32,22 @@ const SavedItemsPage = () => {
       toast.error('Please enter description and price');
       return;
     }
-    await upsertItem(description.trim(), parseFloat(price), unit);
+    await upsertItem(description.trim(), parseFloat(price), unit, {
+      width: width ? parseFloat(width) : null,
+      height: height ? parseFloat(height) : null,
+      pieces: pieces ? parseInt(pieces) : null,
+      mrp: mrp ? parseFloat(mrp) : null,
+      taxRate: taxRate ? parseFloat(taxRate) : 0,
+    });
     toast.success('Item saved');
     setDescription('');
     setPrice('');
     setUnit('pcs');
+    setWidth('');
+    setHeight('');
+    setPieces('');
+    setMrp('');
+    setTaxRate('');
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -97,6 +113,28 @@ const SavedItemsPage = () => {
               </Button>
             </div>
           </div>
+          <div className="grid grid-cols-2 md:grid-cols-12 gap-3">
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="w">Width <span className="text-xs opacity-60">(optional)</span></Label>
+              <Input id="w" type="number" min="0" step="0.01" value={width} onChange={(e) => setWidth(e.target.value)} placeholder="0" />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="h">Height</Label>
+              <Input id="h" type="number" min="0" step="0.01" value={height} onChange={(e) => setHeight(e.target.value)} placeholder="0" />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="qty">Qty</Label>
+              <Input id="qty" type="number" min="1" step="1" value={pieces} onChange={(e) => setPieces(e.target.value)} placeholder="1" />
+            </div>
+            <div className="md:col-span-3 space-y-2">
+              <Label htmlFor="mrp">MRP (₹)</Label>
+              <Input id="mrp" type="number" min="0" step="0.01" value={mrp} onChange={(e) => setMrp(e.target.value)} placeholder="Original price" />
+            </div>
+            <div className="md:col-span-3 space-y-2">
+              <Label htmlFor="tax">Tax %</Label>
+              <Input id="tax" type="number" min="0" step="0.01" value={taxRate} onChange={(e) => setTaxRate(e.target.value)} placeholder="0" />
+            </div>
+          </div>
         </form>
 
         {/* Search + List */}
@@ -134,6 +172,11 @@ const SavedItemsPage = () => {
                     <p className="font-medium text-foreground truncate">{item.description}</p>
                     <p className="text-xs text-muted-foreground">
                       ₹{item.price} / {item.unit}
+                      {item.width && item.height
+                        ? ` · ${item.width}×${item.height}${item.pieces && item.pieces > 1 ? `×${item.pieces}` : ''}`
+                        : ''}
+                      {item.mrp ? ` · MRP ₹${item.mrp}` : ''}
+                      {item.taxRate ? ` · Tax ${item.taxRate}%` : ''}
                     </p>
                   </div>
                   <Button
