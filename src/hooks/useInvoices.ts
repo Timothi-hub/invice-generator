@@ -63,6 +63,9 @@ export const useInvoices = () => {
             unit: (item as any).unit || 'pcs',
             width: (item as any).width != null ? Number((item as any).width) : null,
             height: (item as any).height != null ? Number((item as any).height) : null,
+            pieces: (item as any).pieces != null ? Number((item as any).pieces) : null,
+            mrp: (item as any).mrp != null ? Number((item as any).mrp) : null,
+            taxRate: (item as any).tax_rate != null ? Number((item as any).tax_rate) : 0,
           })),
       }));
 
@@ -116,6 +119,9 @@ export const useInvoices = () => {
               unit: item.unit || 'pcs',
               width: item.width ?? null,
               height: item.height ?? null,
+              pieces: item.pieces ?? null,
+              mrp: item.mrp ?? null,
+              tax_rate: item.taxRate ?? 0,
             }))
           );
           if (itemsError) throw itemsError;
@@ -157,6 +163,9 @@ export const useInvoices = () => {
               unit: item.unit || 'pcs',
               width: item.width ?? null,
               height: item.height ?? null,
+              pieces: item.pieces ?? null,
+              mrp: item.mrp ?? null,
+              tax_rate: item.taxRate ?? 0,
             }))
           );
           if (itemsError) throw itemsError;
