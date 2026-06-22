@@ -481,6 +481,44 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                   />
                 </div>
               </div>
+              <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-3 items-start">
+                <div className="col-span-1 md:col-span-3 min-w-0">
+                  <Label className="text-xs text-muted-foreground">MRP (₹) <span className="opacity-60">optional</span></Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.mrp ?? ''}
+                    onChange={(e) =>
+                      updateItem(item.id, { mrp: e.target.value === '' ? null : parseFloat(e.target.value) })
+                    }
+                    onBlur={() => handleItemBlur(item)}
+                    placeholder="Original price"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="col-span-1 md:col-span-3 min-w-0">
+                  <Label className="text-xs text-muted-foreground">Tax % (this item)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.taxRate ?? 0}
+                    onChange={(e) =>
+                      updateItem(item.id, { taxRate: e.target.value === '' ? 0 : parseFloat(e.target.value) || 0 })
+                    }
+                    onBlur={() => handleItemBlur(item)}
+                    placeholder="0 = no tax"
+                    className="mt-1"
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-6 flex items-end">
+                  <p className="text-xs text-muted-foreground">
+                    Line: ₹{(item.quantity * item.price).toFixed(2)}
+                    {item.taxRate ? ` + ₹${(item.quantity * item.price * item.taxRate / 100).toFixed(2)} tax` : ''}
+                  </p>
+                </div>
+              </div>
             </div>
           ))}
           
