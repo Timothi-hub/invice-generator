@@ -87,8 +87,11 @@ export type Database = {
           height: number | null
           id: string
           invoice_id: string
+          mrp: number | null
+          pieces: number | null
           price: number
           quantity: number
+          tax_rate: number
           unit: string
           width: number | null
         }
@@ -98,8 +101,11 @@ export type Database = {
           height?: number | null
           id?: string
           invoice_id: string
+          mrp?: number | null
+          pieces?: number | null
           price: number
           quantity?: number
+          tax_rate?: number
           unit?: string
           width?: number | null
         }
@@ -109,8 +115,11 @@ export type Database = {
           height?: number | null
           id?: string
           invoice_id?: string
+          mrp?: number | null
+          pieces?: number | null
           price?: number
           quantity?: number
+          tax_rate?: number
           unit?: string
           width?: number | null
         }
@@ -232,29 +241,44 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          height: number | null
           id: string
+          mrp: number | null
+          pieces: number | null
           price: number
+          tax_rate: number
           unit: string
           updated_at: string
           user_id: string
+          width: number | null
         }
         Insert: {
           created_at?: string
           description: string
+          height?: number | null
           id?: string
+          mrp?: number | null
+          pieces?: number | null
           price?: number
+          tax_rate?: number
           unit?: string
           updated_at?: string
           user_id: string
+          width?: number | null
         }
         Update: {
           created_at?: string
           description?: string
+          height?: number | null
           id?: string
+          mrp?: number | null
+          pieces?: number | null
           price?: number
+          tax_rate?: number
           unit?: string
           updated_at?: string
           user_id?: string
+          width?: number | null
         }
         Relationships: []
       }
