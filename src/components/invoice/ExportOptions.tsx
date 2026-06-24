@@ -51,8 +51,11 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
           width: 190mm !important;
           max-width: 190mm !important;
           min-height: 0 !important;
-          page-break-inside: auto;
+          page-break-inside: auto !important;
+          break-inside: auto !important;
         }
+        #invoice-print-root table { page-break-inside: auto !important; break-inside: auto !important; }
+        #invoice-print-root tr  { page-break-inside: avoid !important; break-inside: avoid !important; }
       `;
 
     printWindow.document.open();
