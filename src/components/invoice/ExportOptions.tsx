@@ -27,6 +27,20 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
 
     const invoiceHtml = invoiceRef.current.outerHTML;
 
+    // Collect all stylesheets from the host document so Tailwind/utility
+    // classes render inside the new print window.
+    const styleTags = Array.from(
+      document.querySelectorAll('link[rel="stylesheet"], style')
+    )
+      .map((node) => {
+        if (node.tagName === 'LINK') {
+          const href = (node as HTMLLinkElement).href;
+          return href ? `<link rel="stylesheet" href="${href}">` : '';
+        }
+        return `<style>${(node as HTMLStyleElement).innerHTML}</style>`;
+      })
+      .join('\n');
+
     const fitStyles = fitOnePage
       ? `
         html, body { height: auto; }
@@ -66,6 +80,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
           <title>Invoice ${invoiceNumber}</title>
+          ${styleTags}
           <style>
             @page { size: A4; margin: 10mm; }
             html, body { margin: 0; padding: 0; background: #fff; }
@@ -74,6 +89,8 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
             ${fitStyles}
             #invoice-print-root img { max-width: 100%; height: auto; }
             #invoice-print-root table { width: 100% !important; table-layout: auto; }
+            /* Neutralize any inline transform from ResponsiveInvoiceFrame parents */
+            #invoice-print-root { transform: none !important; }
           </style>
         </head>
         <body>
@@ -82,6 +99,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
             window.onload = () => {
               const fit = ${fitOnePage ? 'true' : 'false'};
               const root = document.getElementById('invoice-print-root');
+              if (root) { root.style.transform = 'none'; root.style.width = ''; }
               if (fit && root) {
                 // Scale invoice down so it fits within a single A4 page.
                 const mmToPx = 96 / 25.4;
@@ -97,10 +115,18 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
                 }
               }
               window.focus();
-              setTimeout(() => {
-                window.print();
-                window.onafterprint = () => window.close();
-              }, 150);
+              // Wait for stylesheets & images to load before printing.
+              const imgs = Array.from(document.images);
+              Promise.all(
+                imgs.map((img) =>
+                  img.complete ? Promise.resolve() : new Promise((r) => { img.onload = img.onerror = r; })
+                )
+              ).then(() => {
+                setTimeout(() => {
+                  window.print();
+                  window.onafterprint = () => window.close();
+                }, 350);
+              });
             };
           </script>
         </body>
