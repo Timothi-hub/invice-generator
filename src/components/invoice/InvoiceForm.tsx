@@ -422,7 +422,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         </div>
 
         <div className="space-y-3">
-          {invoice.items.map((item, index) => (
+          {invoice.items.map((item, index) => {
+            const errors = getItemErrors(item);
+            return (
             <div key={item.id} className="p-3 md:p-4 bg-muted/50 rounded-lg space-y-3 relative">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Item #{index + 1}</span>
@@ -476,9 +478,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { width: e.target.value === '' ? null : parseFloat(e.target.value) })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.width && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="W"
                       />
+                      {errors.width && <p className="text-[10px] text-destructive mt-1">{errors.width}</p>}
                     </div>
                     <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">H</Label>
@@ -490,9 +493,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { height: e.target.value === '' ? null : parseFloat(e.target.value) })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.height && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="H"
                       />
+                      {errors.height && <p className="text-[10px] text-destructive mt-1">{errors.height}</p>}
                     </div>
                     <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">Qty</Label>
@@ -504,9 +508,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { pieces: e.target.value === '' ? 1 : parseInt(e.target.value) || 1 })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.pieces && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="Qty"
                       />
+                      {errors.pieces && <p className="text-[10px] text-destructive mt-1">{errors.pieces}</p>}
                     </div>
                     <div className="col-span-2 md:col-span-2 min-w-0">
                       <Label className="text-xs text-muted-foreground">Total</Label>
@@ -539,13 +544,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     onBlur={() => handleItemBlur(item)}
                     placeholder="Item description"
                     list={`saved-items-${item.id}`}
-                    className="mt-1"
+                    className={cn('mt-1', errors.description && 'border-destructive focus-visible:ring-destructive')}
                   />
                   <datalist id={`saved-items-${item.id}`}>
                     {savedItems.map((s) => (
                       <option key={s.id} value={s.description} />
                     ))}
                   </datalist>
+                  {errors.description && <p className="text-[10px] text-destructive mt-1">{errors.description}</p>}
                 </div>
                 <div className="col-span-2 md:col-span-3 min-w-0">
                   <Label className="text-xs text-muted-foreground">
@@ -558,8 +564,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     value={item.price}
                     onChange={(e) => updateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
                     onBlur={() => handleItemBlur(item)}
-                    className="mt-1"
+                    className={cn('mt-1', errors.price && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.price && <p className="text-[10px] text-destructive mt-1">{errors.price}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-3 items-start">
@@ -575,8 +582,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     }
                     onBlur={() => handleItemBlur(item)}
                     placeholder="Original price"
-                    className="mt-1"
+                    className={cn('mt-1', errors.mrp && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.mrp && <p className="text-[10px] text-destructive mt-1">{errors.mrp}</p>}
                 </div>
                 <div className="col-span-1 md:col-span-3 min-w-0">
                   <Label className="text-xs text-muted-foreground">Tax % (this item)</Label>
@@ -590,8 +598,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     }
                     onBlur={() => handleItemBlur(item)}
                     placeholder="0 = no tax"
-                    className="mt-1"
+                    className={cn('mt-1', errors.taxRate && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.taxRate && <p className="text-[10px] text-destructive mt-1">{errors.taxRate}</p>}
                 </div>
                 <div className="col-span-2 md:col-span-6 flex items-end">
                   <p className="text-xs text-muted-foreground">
@@ -601,7 +610,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
           
           {invoice.items.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
