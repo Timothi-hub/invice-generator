@@ -16,6 +16,7 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Command,
   CommandEmpty,
@@ -172,8 +173,47 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
     }
   };
 
+  const getItemErrors = (item: InvoiceItem) => {
+    const errors: { description?: string; price?: string; mrp?: string; taxRate?: string; width?: string; height?: string; pieces?: string } = {};
+    if (!item.description.trim()) errors.description = 'Description is required';
+    if (!(item.price > 0)) errors.price = 'Price must be greater than 0';
+    if (item.mrp != null && item.mrp !== ('' as any)) {
+      if (!(item.mrp > 0)) errors.mrp = 'MRP must be greater than 0';
+      else if (item.price > 0 && item.mrp < item.price) errors.mrp = 'MRP should be ≥ selling price';
+    }
+    if (item.taxRate != null && item.taxRate !== 0) {
+      if (item.taxRate < 0 || item.taxRate > 100) errors.taxRate = 'Tax % must be between 0 and 100';
+    }
+    if (item.unit && item.unit !== 'pcs') {
+      if (!item.width || item.width <= 0) errors.width = 'Required';
+      if (!item.height || item.height <= 0) errors.height = 'Required';
+      if (item.pieces != null && item.pieces < 1) errors.pieces = 'Min 1';
+    }
+    return errors;
+  };
+
   const SavedItemPicker = ({ itemId }: { itemId: string }) => {
     const [open, setOpen] = useState(false);
+    const [query, setQuery] = useState('');
+    const [unitFilter, setUnitFilter] = useState<string>('all');
+    const [onlyWithDims, setOnlyWithDims] = useState(false);
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+
+    const filteredSaved = useMemo(() => {
+      const q = query.trim().toLowerCase();
+      const min = minPrice ? parseFloat(minPrice) : null;
+      const max = maxPrice ? parseFloat(maxPrice) : null;
+      return savedItems.filter((s) => {
+        if (q && !s.description.toLowerCase().includes(q)) return false;
+        if (unitFilter !== 'all' && (s.unit || 'pcs') !== unitFilter) return false;
+        if (onlyWithDims && !(s.width && s.height)) return false;
+        if (min != null && s.price < min) return false;
+        if (max != null && s.price > max) return false;
+        return true;
+      });
+    }, [query, unitFilter, onlyWithDims, minPrice, maxPrice]);
+
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -187,39 +227,80 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="p-0 w-[--radix-popover-trigger-width]" align="start">
-          <Command>
-            <CommandInput placeholder="Search saved items..." />
-            <CommandList>
-              <CommandEmpty>No items found.</CommandEmpty>
-              <CommandGroup>
-                {savedItems.map((s) => (
-                  <CommandItem
-                    key={s.id}
-                    value={`${s.description} ${s.unit}`}
-                    onSelect={() => {
-                      handlePickSaved(itemId, s.id);
-                      setOpen(false);
-                    }}
-                  >
-                    <Check className={cn('mr-2 h-4 w-4 opacity-0')} />
-                    <span className="flex-1 truncate">
-                      {s.description}
-                      {s.width && s.height ? (
-                        <span className="text-xs text-muted-foreground ml-1">
-                          ({s.width}×{s.height}{s.pieces && s.pieces > 1 ? `×${s.pieces}` : ''})
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-2">
-                      ₹{s.price}/{s.unit}
-                      {s.taxRate ? ` +${s.taxRate}%` : ''}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
+        <PopoverContent className="p-0 w-[min(420px,calc(100vw-2rem))]" align="start">
+          <div className="p-3 border-b space-y-2 bg-muted/30">
+            <Input
+              placeholder="Search by name..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="h-8"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Select value={unitFilter} onValueChange={setUnitFilter}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All units</SelectItem>
+                  <SelectItem value="pcs">pcs</SelectItem>
+                  <SelectItem value="sq.in">sq.in</SelectItem>
+                  <SelectItem value="sq.ft">sq.ft</SelectItem>
+                </SelectContent>
+              </Select>
+              <label className="flex items-center gap-2 text-xs px-2 border rounded-md bg-background">
+                <Checkbox
+                  checked={onlyWithDims}
+                  onCheckedChange={(v) => setOnlyWithDims(v === true)}
+                />
+                Has W/H preset
+              </label>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number" min="0" placeholder="Min ₹"
+                value={minPrice} onChange={(e) => setMinPrice(e.target.value)}
+                className="h-8 text-xs"
+              />
+              <Input
+                type="number" min="0" placeholder="Max ₹"
+                value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)}
+                className="h-8 text-xs"
+              />
+            </div>
+            {(query || unitFilter !== 'all' || onlyWithDims || minPrice || maxPrice) && (
+              <button
+                type="button"
+                onClick={() => { setQuery(''); setUnitFilter('all'); setOnlyWithDims(false); setMinPrice(''); setMaxPrice(''); }}
+                className="text-xs text-primary hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+          <div className="max-h-64 overflow-auto">
+            {filteredSaved.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">No items match.</p>
+            ) : (
+              filteredSaved.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => { handlePickSaved(itemId, s.id); setOpen(false); }}
+                  className="w-full text-left px-3 py-2 hover:bg-accent flex items-center gap-2 text-sm border-b last:border-0"
+                >
+                  <span className="flex-1 truncate">
+                    {s.description}
+                    {s.width && s.height ? (
+                      <span className="text-xs text-muted-foreground ml-1">
+                        ({s.width}×{s.height}{s.pieces && s.pieces > 1 ? `×${s.pieces}` : ''})
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    ₹{s.price}/{s.unit}{s.taxRate ? ` +${s.taxRate}%` : ''}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
         </PopoverContent>
       </Popover>
     );
@@ -341,7 +422,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
         </div>
 
         <div className="space-y-3">
-          {invoice.items.map((item, index) => (
+          {invoice.items.map((item, index) => {
+            const errors = getItemErrors(item);
+            return (
             <div key={item.id} className="p-3 md:p-4 bg-muted/50 rounded-lg space-y-3 relative">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium text-muted-foreground">Item #{index + 1}</span>
@@ -395,9 +478,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { width: e.target.value === '' ? null : parseFloat(e.target.value) })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.width && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="W"
                       />
+                      {errors.width && <p className="text-[10px] text-destructive mt-1">{errors.width}</p>}
                     </div>
                     <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">H</Label>
@@ -409,9 +493,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { height: e.target.value === '' ? null : parseFloat(e.target.value) })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.height && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="H"
                       />
+                      {errors.height && <p className="text-[10px] text-destructive mt-1">{errors.height}</p>}
                     </div>
                     <div className="col-span-1 md:col-span-1 min-w-0">
                       <Label className="text-xs text-muted-foreground">Qty</Label>
@@ -423,9 +508,10 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         onChange={(e) =>
                           updateItem(item.id, { pieces: e.target.value === '' ? 1 : parseInt(e.target.value) || 1 })
                         }
-                        className="mt-1"
+                        className={cn('mt-1', errors.pieces && 'border-destructive focus-visible:ring-destructive')}
                         placeholder="Qty"
                       />
+                      {errors.pieces && <p className="text-[10px] text-destructive mt-1">{errors.pieces}</p>}
                     </div>
                     <div className="col-span-2 md:col-span-2 min-w-0">
                       <Label className="text-xs text-muted-foreground">Total</Label>
@@ -458,13 +544,14 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     onBlur={() => handleItemBlur(item)}
                     placeholder="Item description"
                     list={`saved-items-${item.id}`}
-                    className="mt-1"
+                    className={cn('mt-1', errors.description && 'border-destructive focus-visible:ring-destructive')}
                   />
                   <datalist id={`saved-items-${item.id}`}>
                     {savedItems.map((s) => (
                       <option key={s.id} value={s.description} />
                     ))}
                   </datalist>
+                  {errors.description && <p className="text-[10px] text-destructive mt-1">{errors.description}</p>}
                 </div>
                 <div className="col-span-2 md:col-span-3 min-w-0">
                   <Label className="text-xs text-muted-foreground">
@@ -477,8 +564,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     value={item.price}
                     onChange={(e) => updateItem(item.id, { price: parseFloat(e.target.value) || 0 })}
                     onBlur={() => handleItemBlur(item)}
-                    className="mt-1"
+                    className={cn('mt-1', errors.price && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.price && <p className="text-[10px] text-destructive mt-1">{errors.price}</p>}
                 </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-12 gap-2 md:gap-3 items-start">
@@ -494,8 +582,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     }
                     onBlur={() => handleItemBlur(item)}
                     placeholder="Original price"
-                    className="mt-1"
+                    className={cn('mt-1', errors.mrp && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.mrp && <p className="text-[10px] text-destructive mt-1">{errors.mrp}</p>}
                 </div>
                 <div className="col-span-1 md:col-span-3 min-w-0">
                   <Label className="text-xs text-muted-foreground">Tax % (this item)</Label>
@@ -509,8 +598,9 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                     }
                     onBlur={() => handleItemBlur(item)}
                     placeholder="0 = no tax"
-                    className="mt-1"
+                    className={cn('mt-1', errors.taxRate && 'border-destructive focus-visible:ring-destructive')}
                   />
+                  {errors.taxRate && <p className="text-[10px] text-destructive mt-1">{errors.taxRate}</p>}
                 </div>
                 <div className="col-span-2 md:col-span-6 flex items-end">
                   <p className="text-xs text-muted-foreground">
@@ -520,7 +610,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
           
           {invoice.items.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
