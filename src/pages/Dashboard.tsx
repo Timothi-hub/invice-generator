@@ -128,20 +128,21 @@ const Dashboard = () => {
 
   return (
     <AppLayout title="Invoices">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto flex flex-col h-[calc(100dvh-8rem)] min-h-[560px]">
         {/* Header */}
-        <div className="flex items-start justify-between flex-wrap gap-3 mb-5">
+        <div className="flex items-center justify-between flex-wrap gap-3 mb-3 shrink-0">
           <div>
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
               {currentInvoiceId ? 'Edit Invoice' : 'Create Invoice'}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Fill the details below to generate a new invoice.
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
             <Button
               onClick={handleNewInvoice}
+              size="sm"
               className="bg-violet-600 hover:bg-violet-700 text-white"
             >
               <FilePlus className="w-4 h-4 mr-2" />
@@ -149,6 +150,7 @@ const Dashboard = () => {
             </Button>
             <Button
               onClick={() => navigate('/preview')}
+              size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Eye className="w-4 h-4 mr-2" />
@@ -157,6 +159,7 @@ const Dashboard = () => {
             <Button
               onClick={handleSave}
               disabled={isSaving}
+              size="sm"
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Save className="w-4 h-4 mr-2" />
@@ -165,21 +168,21 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
           {/* Main form column */}
-          <div className="lg:col-span-2 space-y-5">
+          <div className="lg:col-span-2 space-y-4 overflow-y-auto pr-1 -mr-1">
             {customers.length > 0 && (
-              <div className="rounded-xl border bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30 p-4 md:p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-violet-600 text-white flex items-center justify-center">
-                    <Users className="w-4 h-4" />
+              <div className="rounded-xl border bg-gradient-to-br from-violet-50 to-indigo-50 dark:from-violet-950/30 dark:to-indigo-950/30 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-lg bg-violet-600 text-white flex items-center justify-center">
+                    <Users className="w-3.5 h-3.5" />
                   </div>
-                  <h3 className="font-semibold text-violet-700 dark:text-violet-300">
+                  <h3 className="font-semibold text-sm text-violet-700 dark:text-violet-300">
                     Quick Select Customer
                   </h3>
                 </div>
                 <Select onValueChange={handleSelectCustomer}>
-                  <SelectTrigger className="bg-background">
+                  <SelectTrigger className="bg-background h-9">
                     <SelectValue placeholder="Select a saved customer..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -198,14 +201,14 @@ const Dashboard = () => {
           </div>
 
           {/* Sidebar */}
-          <aside className="space-y-4">
+          <aside className="space-y-3 overflow-y-auto pr-1 -mr-1">
             {/* Invoice Summary */}
-            <div className="rounded-xl p-5 text-white shadow-lg bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5" />
-                <h3 className="font-semibold text-lg">Invoice Summary</h3>
+            <div className="rounded-xl p-4 text-white shadow-lg bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-4 h-4" />
+                <h3 className="font-semibold text-base">Invoice Summary</h3>
               </div>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between">
                   <span className="opacity-90">Subtotal</span>
                   <span className="font-medium">{fmt(subtotal)}</span>
@@ -218,25 +221,25 @@ const Dashboard = () => {
                   <span className="opacity-90">Total Charges</span>
                   <span className="font-medium">+ {fmt(totalCharges)}</span>
                 </div>
-                <div className="border-t border-white/30 my-2"></div>
+                <div className="border-t border-white/30 my-1.5"></div>
                 <div className="flex justify-between text-base">
                   <span className="font-semibold">Total Amount</span>
                   <span className="font-bold">{fmt(totalAmount)}</span>
                 </div>
               </div>
-              <div className="mt-4 rounded-lg bg-white/15 backdrop-blur p-3 flex justify-between text-sm">
+              <div className="mt-3 rounded-lg bg-white/15 backdrop-blur p-2.5 flex justify-between text-sm">
                 <span>Advance Received</span>
                 <span className="font-medium">- {fmt(invoice.advance)}</span>
               </div>
-              <div className="mt-3 flex justify-between items-center">
-                <span className="font-semibold text-lg">Balance Due</span>
-                <span className="font-bold text-2xl">{fmt(balanceDue)}</span>
+              <div className="mt-2 flex justify-between items-center">
+                <span className="font-semibold">Balance Due</span>
+                <span className="font-bold text-xl">{fmt(balanceDue)}</span>
               </div>
             </div>
 
             {/* Important Note */}
-            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-4">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 p-3">
+              <div className="flex items-center gap-2 mb-1.5">
                 <Info className="w-4 h-4 text-amber-600" />
                 <h4 className="font-semibold text-amber-700 dark:text-amber-300 text-sm">Important Note</h4>
               </div>
@@ -246,8 +249,8 @@ const Dashboard = () => {
             </div>
 
             {/* Tips */}
-            <div className="rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/20 dark:border-sky-900 p-4">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-xl border border-sky-200 bg-sky-50 dark:bg-sky-950/20 dark:border-sky-900 p-3">
+              <div className="flex items-center gap-2 mb-1.5">
                 <Lightbulb className="w-4 h-4 text-sky-600" />
                 <h4 className="font-semibold text-sky-700 dark:text-sky-300 text-sm">Invoice Tips</h4>
               </div>
@@ -260,8 +263,8 @@ const Dashboard = () => {
             </div>
 
             {/* Shortcuts */}
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900 p-4">
-              <div className="flex items-center gap-2 mb-2">
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-900 p-3">
+              <div className="flex items-center gap-2 mb-1.5">
                 <Keyboard className="w-4 h-4 text-emerald-600" />
                 <h4 className="font-semibold text-emerald-700 dark:text-emerald-300 text-sm">Shortcuts</h4>
               </div>
