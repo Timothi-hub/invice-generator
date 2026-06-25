@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { InvoiceData, InvoiceItem } from '@/types/invoice';
-import { Plus, Trash2, AlertTriangle, Wand2, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, AlertTriangle, Wand2, Check, ChevronsUpDown, FileText, User, Package, Receipt, TrendingUp, ScrollText } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useSavedItems } from '@/hooks/useSavedItems';
 import { useCustomers } from '@/hooks/useCustomers';
@@ -310,7 +310,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
     <div className="space-y-5 md:space-y-6">
       {/* Invoice Details */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <h3 className="font-semibold text-base md:text-lg text-foreground">Invoice Details</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
+            <FileText className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base md:text-lg text-blue-700 dark:text-blue-300">Invoice Details</h3>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -358,7 +363,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
       {/* Customer Details */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <h3 className="font-semibold text-base md:text-lg text-foreground">Customer Details</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
+            <User className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base md:text-lg text-emerald-700 dark:text-emerald-300">Customer Details</h3>
+        </div>
         
         <div className="space-y-4">
           <div className="space-y-2 relative" ref={customerWrapperRef}>
@@ -415,7 +425,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       {/* Items */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-base md:text-lg text-foreground">Items</h3>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-950/40 text-orange-600 flex items-center justify-center">
+              <Package className="w-4 h-4" />
+            </div>
+            <h3 className="font-semibold text-base md:text-lg text-orange-700 dark:text-orange-300">Items</h3>
+          </div>
           <Button type="button" onClick={addItem} size="sm" variant="outline">
             <Plus className="w-4 h-4 mr-1" /> Add Item
           </Button>
@@ -623,7 +638,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
       {/* Additional Charges */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <h3 className="font-semibold text-base md:text-lg text-foreground">Additional Charges</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 flex items-center justify-center">
+            <Receipt className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base md:text-lg text-violet-700 dark:text-violet-300">Additional Charges</h3>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
@@ -682,7 +702,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
       {/* Expenses (for profit calculation) */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <h3 className="font-semibold text-base md:text-lg text-foreground">Expenses & Profit Tracking</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base md:text-lg text-rose-700 dark:text-rose-300">Expenses & Profit Tracking</h3>
+        </div>
         <p className="text-sm text-muted-foreground">This is for your records only and won't appear on the invoice.</p>
         
         <div className="space-y-2">
@@ -701,7 +726,12 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
       {/* Terms */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <h3 className="font-semibold text-base md:text-lg text-foreground">Terms & Conditions</h3>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 flex items-center justify-center">
+            <ScrollText className="w-4 h-4" />
+          </div>
+          <h3 className="font-semibold text-base md:text-lg text-sky-700 dark:text-sky-300">Terms & Conditions</h3>
+        </div>
         
         <Textarea
           value={invoice.termsConditions}
