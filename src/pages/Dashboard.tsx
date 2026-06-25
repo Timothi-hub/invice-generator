@@ -37,6 +37,20 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state, invoices]);
 
+  // Keyboard shortcuts (must be declared before any early return)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === 's') { e.preventDefault(); handleSave(); }
+      else if (k === 'p') { e.preventDefault(); navigate('/preview'); }
+      else if (k === 'n') { e.preventDefault(); handleNewInvoice(); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice, currentInvoiceId]);
+
   const handleSave = async () => {
     if (!invoice.invoiceNumber) {
       toast.error('Please enter an invoice number');
@@ -111,20 +125,6 @@ const Dashboard = () => {
   const totalAmount = calculateTotal(invoice.items, invoice.deliveryCharges, invoice.designingCharges, invoice.discount);
   const balanceDue = totalAmount - (invoice.advance || 0);
   const fmt = (n: number) => `₹${(n || 0).toFixed(2)}`;
-
-  // Keyboard shortcuts
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (!(e.ctrlKey || e.metaKey)) return;
-      const k = e.key.toLowerCase();
-      if (k === 's') { e.preventDefault(); handleSave(); }
-      else if (k === 'p') { e.preventDefault(); navigate('/preview'); }
-      else if (k === 'n') { e.preventDefault(); handleNewInvoice(); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoice, currentInvoiceId]);
 
   return (
     <AppLayout title="Invoices">
