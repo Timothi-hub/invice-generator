@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
 const menuItems = [
-  { title: 'Invoices', url: '/', icon: FileText },
+  { title: 'Create Invoices Here', url: '/', icon: FileText },
   { title: 'Preview Invoice', url: '/preview', icon: Eye, colorful: true },
   { title: 'Invoice History', url: '/history', icon: History },
   { title: 'Saved Items', url: '/saved-items', icon: Package },
