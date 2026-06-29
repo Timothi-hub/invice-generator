@@ -113,6 +113,108 @@
   }
 }
 
+/* ============================================================
+   Invoice Form — Spreadsheet/Grid line layout
+   Each field renders as Label | Input row with crisp borders,
+   like an Excel sheet. Pure presentational overrides.
+   ============================================================ */
+@layer components {
+  .invoice-form-grid > div {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    padding: 0 !important;
+    box-shadow: none;
+  }
+  .invoice-form-grid > div > .flex.items-center.gap-2,
+  .invoice-form-grid > div > .flex.justify-between {
+    padding: 0.625rem 0.875rem;
+    border-bottom: 1px solid hsl(var(--border));
+    background: hsl(var(--muted) / 0.5);
+    margin: 0;
+  }
+  /* Field row: label left, control right */
+  .invoice-form-grid .space-y-2 {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    align-items: stretch;
+    border-bottom: 1px solid hsl(var(--border));
+    margin: 0 !important;
+    background: hsl(var(--card));
+  }
+  .invoice-form-grid .space-y-2 > label {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted) / 0.35);
+    border-right: 1px solid hsl(var(--border));
+  }
+  .invoice-form-grid .space-y-2 > :not(label) {
+    padding: 0;
+    margin: 0 !important;
+  }
+  .invoice-form-grid .space-y-2 input,
+  .invoice-form-grid .space-y-2 textarea,
+  .invoice-form-grid .space-y-2 [role="combobox"],
+  .invoice-form-grid .space-y-2 button[role="combobox"] {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    width: 100%;
+    min-height: 2.25rem;
+  }
+  .invoice-form-grid .space-y-2 textarea {
+    min-height: 4.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+  .invoice-form-grid .space-y-2 .flex.gap-2 {
+    gap: 0;
+  }
+  .invoice-form-grid .space-y-2 .flex.gap-2 > button {
+    border-radius: 0 !important;
+    border-left: 1px solid hsl(var(--border)) !important;
+  }
+  /* Collapse grid wrappers to flow rows vertically */
+  .invoice-form-grid .grid.grid-cols-1 {
+    display: block;
+    gap: 0;
+  }
+  /* Items section: keep its grid layout, just add subtle separation */
+  .invoice-form-grid .bg-muted\/50 {
+    border-bottom: 1px solid hsl(var(--border));
+    border-radius: 0 !important;
+  }
+  /* Section last row removes trailing border */
+  .invoice-form-grid > div > :last-child.space-y-2 {
+    border-bottom: 0;
+  }
+  /* Trailing helper text inside sections */
+  .invoice-form-grid > div > p {
+    padding: 0.5rem 0.875rem;
+    margin: 0;
+    background: hsl(var(--muted) / 0.25);
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  /* Customer suggestions popover position fix when label is to the left */
+  .invoice-form-grid .space-y-2.relative > div[class*="absolute"] {
+    left: 160px;
+    width: calc(100% - 160px);
+  }
+  @media (max-width: 640px) {
+    .invoice-form-grid .space-y-2 {
+      grid-template-columns: 120px 1fr;
+    }
+    .invoice-form-grid .space-y-2.relative > div[class*="absolute"] {
+      left: 120px;
+      width: calc(100% - 120px);
+    }
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
