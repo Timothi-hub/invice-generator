@@ -119,18 +119,39 @@
    like an Excel sheet. Pure presentational overrides.
    ============================================================ */
 @layer components {
-  .invoice-form-grid > div {
-    border-radius: 0.5rem;
+  /* Merge all sections into ONE single framed sheet */
+  .invoice-form-grid {
+    gap: 0 !important;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.75rem;
     overflow: hidden;
+    background: hsl(var(--card));
+    box-shadow: 0 1px 2px hsl(var(--foreground) / 0.04);
+  }
+  .invoice-form-grid > div {
+    border-radius: 0 !important;
+    overflow: visible;
     padding: 0 !important;
-    box-shadow: none;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-bottom: 2px solid hsl(var(--border)) !important;
+  }
+  .invoice-form-grid > div:last-child {
+    border-bottom: 0 !important;
   }
   .invoice-form-grid > div > .flex.items-center.gap-2,
   .invoice-form-grid > div > .flex.justify-between {
     padding: 0.625rem 0.875rem;
     border-bottom: 1px solid hsl(var(--border));
-    background: hsl(var(--muted) / 0.5);
+    background: hsl(var(--muted) / 0.65);
     margin: 0;
+  }
+  .invoice-form-grid > div > .flex.items-center.gap-2 h3,
+  .invoice-form-grid > div > .flex.justify-between h3 {
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 700;
+    font-size: 0.875rem;
   }
   /* Field row: label left, control right */
   .invoice-form-grid .space-y-2 {
@@ -147,10 +168,12 @@
     padding: 0.5rem 0.75rem;
     margin: 0;
     font-size: 0.8125rem;
-    font-weight: 500;
-    color: hsl(var(--muted-foreground));
-    background: hsl(var(--muted) / 0.35);
+    font-weight: 700;
+    color: hsl(var(--foreground));
+    background: hsl(var(--muted) / 0.55);
     border-right: 1px solid hsl(var(--border));
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
   }
   .invoice-form-grid .space-y-2 > :not(label) {
     padding: 0;
