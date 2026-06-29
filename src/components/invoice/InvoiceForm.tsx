@@ -10,7 +10,6 @@ import {
   Trash2,
   AlertTriangle,
   Wand2,
-  Check,
   ChevronsUpDown,
   FileText,
   User,
@@ -18,8 +17,6 @@ import {
   Receipt,
   TrendingUp,
   ScrollText,
-  ChevronLeft,
-  ChevronRight,
 } from "lucide-react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useSavedItems } from "@/hooks/useSavedItems";
@@ -42,19 +39,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   const [duplicateInvoice, setDuplicateInvoice] = useState<{ number: string; customerName: string } | null>(null);
   const [showCustomerSuggestions, setShowCustomerSuggestions] = useState(false);
   const customerWrapperRef = useRef<HTMLDivElement>(null);
-  const [step, setStep] = useState(0);
-
-  const STEPS = [
-    { label: "Invoice", icon: FileText, color: "blue" },
-    { label: "Customer", icon: User, color: "emerald" },
-    { label: "Items", icon: Package, color: "orange" },
-    { label: "Charges", icon: Receipt, color: "violet" },
-    { label: "Expenses", icon: TrendingUp, color: "rose" },
-    { label: "Terms", icon: ScrollText, color: "sky" },
-  ];
-  const totalSteps = STEPS.length;
-  const goNext = () => setStep((s) => Math.min(totalSteps - 1, s + 1));
-  const goPrev = () => setStep((s) => Math.max(0, s - 1));
+  // All sections render on a single page, stacked line-by-line.
 
   // Check for duplicate invoice number
   useEffect(() => {
@@ -346,49 +331,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Stepper header */}
-      <div className="bg-card rounded-xl border shadow-sm p-3 md:p-4">
-        <div className="flex items-center justify-between gap-2 overflow-x-auto pb-1">
-          {STEPS.map((s, i) => {
-            const Icon = s.icon;
-            const isActive = i === step;
-            const isDone = i < step;
-            return (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => setStep(i)}
-                className={cn(
-                  "flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs md:text-sm whitespace-nowrap transition-colors shrink-0",
-                  isActive && "bg-primary text-primary-foreground font-semibold",
-                  !isActive && isDone && "text-primary",
-                  !isActive && !isDone && "text-muted-foreground hover:bg-muted",
-                )}
-              >
-                <span
-                  className={cn(
-                    "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold",
-                    isActive ? "bg-primary-foreground/20" : isDone ? "bg-primary/15" : "bg-muted",
-                  )}
-                >
-                  {isDone ? <Check className="w-3 h-3" /> : i + 1}
-                </span>
-                <Icon className="w-3.5 h-3.5 hidden sm:inline" />
-                <span>{s.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="mt-2 h-1.5 w-full rounded-full bg-muted overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all"
-            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
-          />
-        </div>
-      </div>
-
       {/* Invoice Details */}
-      {step === 0 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
@@ -397,7 +340,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           <h3 className="font-semibold text-base md:text-lg text-blue-700 dark:text-blue-300">Invoice Details</h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
             <Label htmlFor="invoiceNumber">Invoice Number</Label>
             <div className="flex gap-2">
@@ -440,10 +383,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           </div>
         </div>
       </div>
-      )}
 
       {/* Customer Details */}
-      {step === 1 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
@@ -503,10 +444,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           </div>
         </div>
       </div>
-      )}
 
       {/* Items */}
-      {step === 2 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -719,10 +658,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           )}
         </div>
       </div>
-      )}
 
       {/* Additional Charges */}
-      {step === 3 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 flex items-center justify-center">
@@ -733,7 +670,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
             <Label htmlFor="deliveryCharges">Delivery Charges (₹)</Label>
             <Input
@@ -757,7 +694,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
             />
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           <div className="space-y-2">
             <Label htmlFor="discount">Discount (₹)</Label>
             <Input
@@ -787,10 +724,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           This will be shown on the invoice and subtracted from the balance due.
         </p>
       </div>
-      )}
 
       {/* Expenses (for profit calculation) */}
-      {step === 4 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
@@ -815,10 +750,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           />
         </div>
       </div>
-      )}
 
       {/* Terms */}
-      {step === 5 && (
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 flex items-center justify-center">
@@ -833,26 +766,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           placeholder="Enter terms and conditions..."
           rows={3}
         />
-      </div>
-      )}
-
-      {/* Step navigation */}
-      <div className="sticky bottom-0 bg-background/95 backdrop-blur border-t -mx-1 px-1 py-2 flex items-center justify-between gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={goPrev} disabled={step === 0}>
-          <ChevronLeft className="w-4 h-4 mr-1" /> Back
-        </Button>
-        <span className="text-xs text-muted-foreground">
-          Step {step + 1} of {totalSteps} · {STEPS[step].label}
-        </span>
-        <Button
-          type="button"
-          size="sm"
-          onClick={goNext}
-          disabled={step === totalSteps - 1}
-          className="bg-primary text-primary-foreground"
-        >
-          Next <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
       </div>
     </div>
   );
