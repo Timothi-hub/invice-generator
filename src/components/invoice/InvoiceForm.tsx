@@ -10,7 +10,6 @@ import {
   Trash2,
   AlertTriangle,
   Wand2,
-  Check,
   ChevronsUpDown,
   FileText,
   User,
