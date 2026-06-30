@@ -17,6 +17,7 @@ export interface InvoiceData {
   invoiceDate: string;
   customerName: string;
   customerAddress: string;
+  customerPhone?: string;
   items: InvoiceItem[];
   deliveryCharges: number;
   designingCharges: number;
