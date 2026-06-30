@@ -330,7 +330,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   };
 
   return (
-    <div className="invoice-form-grid flex flex-col gap-4">
+    <div className="invoice-form-grid flex flex-col">
       {/* Invoice Details */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
