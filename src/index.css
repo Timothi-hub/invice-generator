@@ -141,7 +141,7 @@
   }
   .invoice-form-grid > div > .flex.items-center.gap-2,
   .invoice-form-grid > div > .flex.justify-between {
-    padding: 0.625rem 0.875rem;
+    padding: 0.375rem 0.625rem;
     border-bottom: 1px solid hsl(var(--border));
     background: hsl(var(--muted) / 0.65);
     margin: 0;
@@ -151,12 +151,12 @@
     text-transform: uppercase;
     letter-spacing: 0.04em;
     font-weight: 700;
-    font-size: 0.875rem;
+    font-size: 0.75rem;
   }
   /* Field row: label left, control right */
   .invoice-form-grid .space-y-2 {
     display: grid;
-    grid-template-columns: 160px 1fr;
+    grid-template-columns: clamp(96px, 22%, 150px) 1fr;
     align-items: stretch;
     border-bottom: 1px solid hsl(var(--border));
     margin: 0 !important;
@@ -165,15 +165,16 @@
   .invoice-form-grid .space-y-2 > label {
     display: flex;
     align-items: center;
-    padding: 0.5rem 0.75rem;
+    padding: 0.3rem 0.55rem;
     margin: 0;
-    font-size: 0.8125rem;
+    font-size: 0.72rem;
     font-weight: 700;
     color: hsl(var(--foreground));
     background: hsl(var(--muted) / 0.55);
     border-right: 1px solid hsl(var(--border));
     text-transform: uppercase;
     letter-spacing: 0.03em;
+    line-height: 1.1;
   }
   .invoice-form-grid .space-y-2 > :not(label) {
     padding: 0;
@@ -188,11 +189,15 @@
     box-shadow: none !important;
     background: transparent !important;
     width: 100%;
-    min-height: 2.25rem;
+    min-height: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.8125rem;
+    padding: 0.25rem 0.5rem;
   }
   .invoice-form-grid .space-y-2 textarea {
-    min-height: 4.5rem;
-    padding: 0.5rem 0.75rem;
+    min-height: 2.75rem;
+    height: auto;
+    padding: 0.35rem 0.55rem;
   }
   .invoice-form-grid .space-y-2 .flex.gap-2 {
     gap: 0;
@@ -224,16 +229,27 @@
   }
   /* Customer suggestions popover position fix when label is to the left */
   .invoice-form-grid .space-y-2.relative > div[class*="absolute"] {
-    left: 160px;
-    width: calc(100% - 160px);
+    left: clamp(96px, 22%, 150px);
+    width: calc(100% - clamp(96px, 22%, 150px));
+  }
+  /* Items table: tighten cells */
+  .invoice-form-grid .bg-muted\/50 input,
+  .invoice-form-grid .bg-muted\/50 button {
+    height: 1.85rem;
+    min-height: 1.85rem;
+    font-size: 0.8125rem;
   }
   @media (max-width: 640px) {
     .invoice-form-grid .space-y-2 {
-      grid-template-columns: 120px 1fr;
+      grid-template-columns: 92px 1fr;
+    }
+    .invoice-form-grid .space-y-2 > label {
+      font-size: 0.65rem;
+      padding: 0.25rem 0.4rem;
     }
     .invoice-form-grid .space-y-2.relative > div[class*="absolute"] {
-      left: 120px;
-      width: calc(100% - 120px);
+      left: 92px;
+      width: calc(100% - 92px);
     }
   }
 }
