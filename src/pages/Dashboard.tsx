@@ -77,6 +77,7 @@ const Dashboard = () => {
       invoiceDate: savedInvoice.invoiceDate,
       customerName: savedInvoice.customerName,
       customerAddress: savedInvoice.customerAddress,
+      customerPhone: savedInvoice.customerPhone || '',
       items: savedInvoice.items,
       deliveryCharges: savedInvoice.deliveryCharges,
       designingCharges: savedInvoice.designingCharges,
@@ -105,6 +106,7 @@ const Dashboard = () => {
         ...invoice,
         customerName: customer.name,
         customerAddress: customer.address || '',
+        customerPhone: customer.phone || '',
       });
     }
   };

@@ -330,7 +330,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   };
 
   return (
-    <div className="invoice-form-grid flex flex-col gap-4">
+    <div className="invoice-form-grid flex flex-col">
       {/* Invoice Details */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
         <div className="flex items-center gap-2">
@@ -420,6 +420,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                         ...invoice,
                         customerName: c.name,
                         customerAddress: c.address || invoice.customerAddress,
+                        customerPhone: c.phone || invoice.customerPhone || '',
                       });
                       setShowCustomerSuggestions(false);
                     }}
@@ -440,6 +441,18 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
               onChange={(e) => updateField("customerAddress", e.target.value)}
               placeholder="Customer address"
               rows={3}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="customerPhone">Mobile Number</Label>
+            <Input
+              id="customerPhone"
+              type="tel"
+              value={invoice.customerPhone || ''}
+              onChange={(e) => updateField('customerPhone', e.target.value)}
+              placeholder="+91 XXXXX XXXXX"
+              inputMode="tel"
+              autoComplete="tel"
             />
           </div>
         </div>
