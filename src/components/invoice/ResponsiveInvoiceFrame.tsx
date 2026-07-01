@@ -6,7 +6,13 @@ import { useEffect, useRef, useState, ReactNode } from 'react';
  */
 const A4_PX = 794; // 210mm at 96dpi
 
-const ResponsiveInvoiceFrame = ({ children }: { children: ReactNode }) => {
+interface Props {
+  children: ReactNode;
+  /** Optional max height (px). When set, the frame also scales down so content fits within it. */
+  maxHeight?: number;
+}
+
+const ResponsiveInvoiceFrame = ({ children, maxHeight }: Props) => {
   const wrapRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -15,9 +21,11 @@ const ResponsiveInvoiceFrame = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const update = () => {
       const w = wrapRef.current?.clientWidth ?? A4_PX;
-      const s = Math.min(1, w / A4_PX);
-      setScale(s);
       const innerH = innerRef.current?.scrollHeight;
+      const sw = w / A4_PX;
+      const sh = maxHeight && innerH ? maxHeight / innerH : 1;
+      const s = Math.min(1, sw, sh);
+      setScale(s);
       if (innerH) setHeight(innerH * s);
     };
     update();
@@ -29,7 +37,7 @@ const ResponsiveInvoiceFrame = ({ children }: { children: ReactNode }) => {
       ro.disconnect();
       window.removeEventListener('resize', update);
     };
-  }, []);
+  }, [maxHeight]);
 
   return (
     <div

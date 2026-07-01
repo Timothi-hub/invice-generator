@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import AppLayout from '@/components/AppLayout';
 import { useProfile } from '@/hooks/useProfile';
 import { useDraftInvoice } from '@/contexts/DraftInvoiceContext';
@@ -16,6 +16,18 @@ const PreviewPage = () => {
   const { invoice, selectedTemplate, setSelectedTemplate } = useDraftInvoice();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [detail, setDetail] = useState<'total' | 'expenses' | 'profit' | null>(null);
+  const previewWrapRef = useRef<HTMLDivElement>(null);
+  const [previewH, setPreviewH] = useState<number>(600);
+
+  useEffect(() => {
+    const update = () => {
+      const top = previewWrapRef.current?.getBoundingClientRect().top ?? 0;
+      setPreviewH(Math.max(320, window.innerHeight - top - 24));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
 
   const defaultProfile = profile || {
     companyName: 'Your Company',
@@ -84,26 +96,24 @@ const PreviewPage = () => {
 
   return (
     <AppLayout title="Preview Invoice">
-      <div className="space-y-4 md:space-y-6 max-w-full">
+      <div className="space-y-2 md:space-y-3 max-w-full">
         {/* Colorful Hero */}
-        <div className="relative overflow-hidden rounded-2xl p-4 md:p-6 text-white shadow-xl"
+        <div className="relative overflow-hidden rounded-xl p-2.5 md:p-3 text-white shadow"
           style={{ background: 'linear-gradient(135deg, #0D4C5C 0%, #14b8a6 50%, #f59e0b 100%)' }}
         >
-          <div className="absolute -right-10 -top-10 w-48 h-48 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -left-8 -bottom-12 w-56 h-56 rounded-full bg-white/10 blur-2xl" />
-          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <Eye className="w-6 h-6" />
+          <div className="relative z-10 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
+                <Eye className="w-4 h-4" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  Preview Invoice <Sparkles className="w-5 h-5" />
+                <h2 className="text-base font-bold flex items-center gap-1.5">
+                  Preview Invoice <Sparkles className="w-3.5 h-3.5" />
                 </h2>
-                <p className="text-sm text-white/80">Review, style, and export your invoice</p>
+                <p className="text-[11px] text-white/80 leading-tight">Review, style, and export</p>
               </div>
             </div>
-            <div className="bg-white/15 backdrop-blur rounded-lg p-2">
+            <div className="bg-white/15 backdrop-blur rounded-md p-1">
               <TemplateSelector
                 selectedTemplate={selectedTemplate}
                 onSelectTemplate={setSelectedTemplate}
@@ -112,46 +122,34 @@ const PreviewPage = () => {
           </div>
         </div>
 
-        {/* Export Options */}
-        <Card className="border-2 border-primary/20 shadow-md">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3 text-foreground flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-primary" /> Export Options
-            </h3>
-            <ExportOptions invoiceRef={invoiceRef} invoiceNumber={invoice.invoiceNumber || 'draft'} />
-          </CardContent>
-        </Card>
-
-        {/* Business Summary */}
-        <Card className="no-print shadow-md">
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3 text-foreground">Business Summary</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <button type="button" onClick={() => setDetail('total')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #0D4C5C, #14b8a6)' }}>
-                <TrendingUp className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90 text-center">Total</p>
-                <p className="text-2xl font-bold text-center">₹{total.toFixed(2)}</p>
-                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
-              </button>
-              <button type="button" onClick={() => setDetail('expenses')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
-                <Wallet className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90 text-center">Expenses</p>
-                <p className="text-2xl font-bold text-center">₹{invoice.expenses.toFixed(2)}</p>
-                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
-              </button>
-              <button type="button" onClick={() => setDetail('profit')} className="p-4 rounded-xl text-white shadow-md hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: profit >= 0 ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
-                <Sparkles className="w-5 h-5 mx-auto mb-1 opacity-80" />
-                <p className="text-sm opacity-90 text-center">Profit</p>
-                <p className="text-2xl font-bold text-center">₹{profit.toFixed(2)}</p>
-                <p className="text-[10px] opacity-75 text-center mt-1">Tap for breakdown</p>
-              </button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Compact Export + Summary strip */}
+        <div className="no-print grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2 items-stretch">
+          <Card className="border border-primary/20 shadow-sm">
+            <CardContent className="p-2 flex items-center gap-2 flex-wrap">
+              <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span className="text-xs font-semibold mr-1">Export:</span>
+              <ExportOptions invoiceRef={invoiceRef} invoiceNumber={invoice.invoiceNumber || 'draft'} />
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-3 gap-1.5">
+            <button type="button" onClick={() => setDetail('total')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #0D4C5C, #14b8a6)' }}>
+              <div className="flex items-center gap-1 text-[10px] opacity-90"><TrendingUp className="w-3 h-3" /> Total</div>
+              <p className="text-xs font-bold leading-tight">₹{total.toFixed(0)}</p>
+            </button>
+            <button type="button" onClick={() => setDetail('expenses')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
+              <div className="flex items-center gap-1 text-[10px] opacity-90"><Wallet className="w-3 h-3" /> Expense</div>
+              <p className="text-xs font-bold leading-tight">₹{invoice.expenses.toFixed(0)}</p>
+            </button>
+            <button type="button" onClick={() => setDetail('profit')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: profit >= 0 ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
+              <div className="flex items-center gap-1 text-[10px] opacity-90"><Sparkles className="w-3 h-3" /> Profit</div>
+              <p className="text-xs font-bold leading-tight">₹{profit.toFixed(0)}</p>
+            </button>
+          </div>
+        </div>
 
         {/* Invoice Preview - scales to fit any viewport */}
-        <div className="rounded-lg border shadow-lg bg-white p-2 sm:p-4 overflow-hidden">
-          <ResponsiveInvoiceFrame>
+        <div ref={previewWrapRef} className="rounded-lg border shadow bg-white p-1.5 sm:p-2 overflow-hidden flex justify-center" style={{ height: previewH }}>
+          <ResponsiveInvoiceFrame maxHeight={previewH - 16}>
             <InvoicePreview
               ref={invoiceRef}
               invoice={invoice}
