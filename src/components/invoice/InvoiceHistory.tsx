@@ -189,13 +189,16 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
               return (
                 <div
                   key={invoice.id}
-                  className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${
+                  className={`p-3 transition-colors ${
                     isSelected ? 'bg-primary/10 border-l-4 border-l-primary' : ''
                   }`}
-                  onClick={() => onSelect(invoice)}
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
+                    <button
+                      type="button"
+                      className="flex-1 min-w-0 text-left hover:bg-muted/50 rounded p-1 -m-1"
+                      onClick={() => onSelect(invoice)}
+                    >
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-foreground truncate">
                           {invoice.invoiceNumber || 'No Number'}
@@ -208,7 +211,7 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
                         <span>{format(new Date(invoice.invoiceDate), 'dd MMM yyyy')}</span>
                         <span className="font-medium text-foreground">₹{total.toFixed(2)}</span>
                       </div>
-                    </div>
+                    </button>
                     <div className="flex gap-1">
                       <Button
                         size="icon"
@@ -243,7 +246,10 @@ const InvoiceHistory: React.FC<InvoiceHistoryProps> = ({
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              onClick={() => onDelete(invoice.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(invoice.id);
+                              }}
                             >
                               Delete
                             </AlertDialogAction>
