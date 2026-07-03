@@ -155,7 +155,7 @@ const PreviewPage = () => {
 
   return (
     <AppLayout title="Preview Invoice">
-      <div className="flex flex-col lg:flex-row gap-3 h-[calc(100vh-6rem)] min-h-[500px]">
+      <div className="flex flex-col lg:flex-row gap-3 h-[calc(100vh-6rem)] min-h-[500px] w-full min-w-0 overflow-hidden">
         {/* Left control sidebar - desktop */}
         <aside className="hidden lg:block w-72 shrink-0 rounded-xl overflow-hidden shadow-lg">
           <ControlPanel />
