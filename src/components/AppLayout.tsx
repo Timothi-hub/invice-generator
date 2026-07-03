@@ -27,7 +27,7 @@ const AppLayout = ({ children, title }: AppLayoutProps) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <SidebarInset className="flex-1">
+        <SidebarInset className="flex-1 min-w-0 overflow-hidden">
           <header className="sticky top-0 z-40 bg-background border-b">
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3">
