@@ -162,7 +162,7 @@ const PreviewPage = () => {
         </aside>
 
         {/* Main canvas */}
-        <section className="flex-1 flex flex-col rounded-xl overflow-hidden shadow-lg border bg-slate-100">
+        <section className="flex-1 min-w-0 flex flex-col rounded-xl overflow-hidden shadow-lg border bg-slate-100">
           {/* Slim top toolbar */}
           <header className="no-print bg-white border-b flex items-center justify-between px-3 py-2 gap-2">
             <Sheet>
@@ -182,7 +182,7 @@ const PreviewPage = () => {
           </header>
 
           {/* Preview canvas */}
-          <div ref={canvasRef} className="flex-1 overflow-auto bg-slate-100 p-4 flex items-start justify-center" style={{ height: canvasH }}>
+          <div ref={canvasRef} className="flex-1 min-w-0 overflow-auto bg-slate-100 p-4 flex items-start justify-center" style={{ height: canvasH }}>
             <ResponsiveInvoiceFrame maxHeight={canvasH - 32}>
               <InvoicePreview
                 ref={invoiceRef}
