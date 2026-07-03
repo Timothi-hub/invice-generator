@@ -7,22 +7,23 @@ import InvoicePreview from '@/components/invoice/InvoicePreview';
 import ExportOptions from '@/components/invoice/ExportOptions';
 import ResponsiveInvoiceFrame from '@/components/invoice/ResponsiveInvoiceFrame';
 import TemplateSelector from '@/components/invoice/TemplateSelector';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Eye, Sparkles, TrendingUp, Wallet, Receipt } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { SlidersHorizontal } from 'lucide-react';
 
 const PreviewPage = () => {
   const { profile } = useProfile();
   const { invoice, selectedTemplate, setSelectedTemplate } = useDraftInvoice();
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [detail, setDetail] = useState<'total' | 'expenses' | 'profit' | null>(null);
-  const previewWrapRef = useRef<HTMLDivElement>(null);
-  const [previewH, setPreviewH] = useState<number>(600);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const [canvasH, setCanvasH] = useState<number>(600);
 
   useEffect(() => {
     const update = () => {
-      const top = previewWrapRef.current?.getBoundingClientRect().top ?? 0;
-      setPreviewH(Math.max(320, window.innerHeight - top - 24));
+      const top = canvasRef.current?.getBoundingClientRect().top ?? 0;
+      setCanvasH(Math.max(320, window.innerHeight - top - 16));
     };
     update();
     window.addEventListener('resize', update);
@@ -94,71 +95,105 @@ const PreviewPage = () => {
     return null;
   };
 
+  const ControlPanel = () => (
+    <div className="h-full flex flex-col bg-[#0D4C5C] text-white">
+      <div className="p-5 border-b border-white/10">
+        <h1 className="text-base font-bold tracking-tight flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-teal-400 rounded-full" />
+          Invoice Studio
+        </h1>
+        <p className="text-[10px] text-teal-200/60 mt-1 uppercase tracking-widest">Preview & Export</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-semibold text-teal-200/50 uppercase tracking-wider">Financial Overview</h3>
+          <div className="space-y-1.5">
+            <button
+              type="button"
+              onClick={() => setDetail('total')}
+              className="w-full text-left bg-white/5 hover:bg-white/10 transition-colors p-2.5 rounded-lg border border-white/10"
+            >
+              <p className="text-[9px] text-teal-200/60 uppercase tracking-wider">Total Amount</p>
+              <p className="text-base font-semibold">{fmt(total)}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetail('expenses')}
+              className="w-full text-left bg-white/5 hover:bg-white/10 transition-colors p-2.5 rounded-lg border border-white/10"
+            >
+              <p className="text-[9px] text-teal-200/60 uppercase tracking-wider">Expenses</p>
+              <p className="text-base font-semibold">{fmt(invoice.expenses)}</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetail('profit')}
+              className="w-full text-left bg-teal-500/15 hover:bg-teal-500/25 transition-colors p-2.5 rounded-lg border border-teal-400/30"
+            >
+              <p className="text-[9px] text-teal-200 uppercase tracking-wider">Net Profit</p>
+              <p className={`text-base font-semibold ${profit >= 0 ? 'text-teal-200' : 'text-rose-300'}`}>{fmt(profit)}</p>
+            </button>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="text-[10px] font-semibold text-teal-200/50 uppercase tracking-wider">Template</h3>
+          <div className="[&_button]:!text-slate-800">
+            <TemplateSelector
+              selectedTemplate={selectedTemplate}
+              onSelectTemplate={setSelectedTemplate}
+            />
+          </div>
+        </section>
+      </div>
+
+      <div className="p-4 bg-black/20 text-[9px] text-teal-200/40 text-center uppercase tracking-[0.2em]">
+        Invoice #{invoice.invoiceNumber || 'draft'}
+      </div>
+    </div>
+  );
+
   return (
     <AppLayout title="Preview Invoice">
-      <div className="space-y-2 md:space-y-3 max-w-full">
-        {/* Colorful Hero */}
-        <div className="relative overflow-hidden rounded-xl p-2.5 md:p-3 text-white shadow"
-          style={{ background: 'linear-gradient(135deg, #0D4C5C 0%, #14b8a6 50%, #f59e0b 100%)' }}
-        >
-          <div className="relative z-10 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur flex items-center justify-center">
-                <Eye className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold flex items-center gap-1.5">
-                  Preview Invoice <Sparkles className="w-3.5 h-3.5" />
-                </h2>
-                <p className="text-[11px] text-white/80 leading-tight">Review, style, and export</p>
-              </div>
-            </div>
-            <div className="bg-white/15 backdrop-blur rounded-md p-1">
-              <TemplateSelector
-                selectedTemplate={selectedTemplate}
-                onSelectTemplate={setSelectedTemplate}
-              />
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col lg:flex-row gap-3 h-[calc(100vh-6rem)] min-h-[500px]">
+        {/* Left control sidebar - desktop */}
+        <aside className="hidden lg:block w-72 shrink-0 rounded-xl overflow-hidden shadow-lg">
+          <ControlPanel />
+        </aside>
 
-        {/* Compact Export + Summary strip */}
-        <div className="no-print grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-2 items-stretch">
-          <Card className="border border-primary/20 shadow-sm">
-            <CardContent className="p-2 flex items-center gap-2 flex-wrap">
-              <Receipt className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span className="text-xs font-semibold mr-1">Export:</span>
+        {/* Main canvas */}
+        <section className="flex-1 flex flex-col rounded-xl overflow-hidden shadow-lg border bg-slate-100">
+          {/* Slim top toolbar */}
+          <header className="no-print bg-white border-b flex items-center justify-between px-3 py-2 gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="lg:hidden h-8 gap-1.5">
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  Controls
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-[280px]">
+                <ControlPanel />
+              </SheetContent>
+            </Sheet>
+            <div className="flex-1 min-w-0">
               <ExportOptions invoiceRef={invoiceRef} invoiceNumber={invoice.invoiceNumber || 'draft'} />
-            </CardContent>
-          </Card>
-          <div className="grid grid-cols-3 gap-1.5">
-            <button type="button" onClick={() => setDetail('total')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #0D4C5C, #14b8a6)' }}>
-              <div className="flex items-center gap-1 text-[10px] opacity-90"><TrendingUp className="w-3 h-3" /> Total</div>
-              <p className="text-xs font-bold leading-tight">₹{total.toFixed(0)}</p>
-            </button>
-            <button type="button" onClick={() => setDetail('expenses')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: 'linear-gradient(135deg, #f97316, #f59e0b)' }}>
-              <div className="flex items-center gap-1 text-[10px] opacity-90"><Wallet className="w-3 h-3" /> Expense</div>
-              <p className="text-xs font-bold leading-tight">₹{invoice.expenses.toFixed(0)}</p>
-            </button>
-            <button type="button" onClick={() => setDetail('profit')} className="px-2 py-1.5 rounded-md text-white shadow-sm hover:scale-[1.02] active:scale-95 transition-transform text-left" style={{ background: profit >= 0 ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #dc2626, #ef4444)' }}>
-              <div className="flex items-center gap-1 text-[10px] opacity-90"><Sparkles className="w-3 h-3" /> Profit</div>
-              <p className="text-xs font-bold leading-tight">₹{profit.toFixed(0)}</p>
-            </button>
-          </div>
-        </div>
+            </div>
+          </header>
 
-        {/* Invoice Preview - scales to fit any viewport */}
-        <div ref={previewWrapRef} className="rounded-lg border shadow bg-white p-1.5 sm:p-2 overflow-hidden flex justify-center" style={{ height: previewH }}>
-          <ResponsiveInvoiceFrame maxHeight={previewH - 16}>
-            <InvoicePreview
-              ref={invoiceRef}
-              invoice={invoice}
-              profile={defaultProfile}
-              showExpensesProfit={false}
-              template={selectedTemplate}
-            />
-          </ResponsiveInvoiceFrame>
-        </div>
+          {/* Preview canvas */}
+          <div ref={canvasRef} className="flex-1 overflow-auto bg-slate-100 p-4 flex items-start justify-center" style={{ height: canvasH }}>
+            <ResponsiveInvoiceFrame maxHeight={canvasH - 32}>
+              <InvoicePreview
+                ref={invoiceRef}
+                invoice={invoice}
+                profile={defaultProfile}
+                showExpensesProfit={false}
+                template={selectedTemplate}
+              />
+            </ResponsiveInvoiceFrame>
+          </div>
+        </section>
 
         <Dialog open={detail !== null} onOpenChange={(o) => !o && setDetail(null)}>
           <DialogContent className="max-w-md">
