@@ -29,46 +29,78 @@ const PAPER_SIZES: Record<PaperSize, { w: number; h: number; jsPdfFormat: string
   A5:     { w: 148, h: 210, jsPdfFormat: 'a5' },
 };
 const PAGE_MARGIN_MM = 10;
+const EXPORT_WIDTH_PX = 794; // 210mm at 96dpi (A4 invoice design width)
+const EXPORT_MIN_HEIGHT_PX = 1123; // 297mm at 96dpi
 
 const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber }) => {
   const [fitOnePage, setFitOnePage] = useState(true);
   const [paperSize, setPaperSize] = useState<PaperSize>('A4');
 
-  // Temporarily neutralize the ResponsiveInvoiceFrame scale transform so
-  // html2canvas captures the invoice at its natural A4 size instead of the
-  // scaled-down preview (which causes overlapping/garbled text in exports).
-  const withUnscaledInvoice = async <T,>(fn: () => Promise<T>): Promise<T> => {
-    const el = invoiceRef.current;
-    if (!el) return fn();
-    // Walk up and cache any ancestor transforms we override.
-    const touched: { node: HTMLElement; transform: string; width: string; height: string; overflow: string }[] = [];
-    let node: HTMLElement | null = el.parentElement;
-    while (node && node !== document.body) {
-      const cs = window.getComputedStyle(node);
-      if (cs.transform && cs.transform !== 'none') {
-        touched.push({
-          node,
-          transform: node.style.transform,
-          width: node.style.width,
-          height: node.style.height,
-          overflow: node.style.overflow,
+  const waitForImages = async (root: HTMLElement) => {
+    const images = Array.from(root.querySelectorAll('img'));
+    await Promise.all(
+      images.map((img) => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve();
         });
-        node.style.transform = 'none';
-        node.style.width = 'auto';
-        node.style.height = 'auto';
-        node.style.overflow = 'visible';
-      }
-      node = node.parentElement;
-    }
+      }),
+    );
+  };
+
+  // Capture a fresh, fixed-width clone instead of the on-screen preview.
+  // The preview is intentionally scaled to fit the screen; html2canvas renders
+  // scaled ancestors poorly and produces overlapping text in PDF/JPEG exports.
+  const captureInvoiceCanvas = async () => {
+    const source = invoiceRef.current;
+    if (!source) throw new Error('Invoice preview not found');
+
+    await document.fonts?.ready;
+
+    const host = document.createElement('div');
+    const clone = source.cloneNode(true) as HTMLElement;
+
+    Object.assign(host.style, {
+      position: 'fixed',
+      left: '-10000px',
+      top: '0',
+      width: `${EXPORT_WIDTH_PX}px`,
+      background: '#ffffff',
+      pointerEvents: 'none',
+      zIndex: '-1',
+    });
+
+    Object.assign(clone.style, {
+      transform: 'none',
+      width: `${EXPORT_WIDTH_PX}px`,
+      maxWidth: `${EXPORT_WIDTH_PX}px`,
+      minHeight: `${EXPORT_MIN_HEIGHT_PX}px`,
+      margin: '0',
+      boxShadow: 'none',
+    });
+
+    clone.querySelectorAll<HTMLElement>('.no-print').forEach((el) => {
+      el.style.display = 'none';
+    });
+
+    host.appendChild(clone);
+    document.body.appendChild(host);
+
     try {
-      return await fn();
-    } finally {
-      touched.forEach((t) => {
-        t.node.style.transform = t.transform;
-        t.node.style.width = t.width;
-        t.node.style.height = t.height;
-        t.node.style.overflow = t.overflow;
+      await waitForImages(clone);
+      return await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        width: EXPORT_WIDTH_PX,
+        height: clone.scrollHeight,
+        windowWidth: Math.max(EXPORT_WIDTH_PX, document.documentElement.clientWidth),
+        windowHeight: Math.max(clone.scrollHeight, document.documentElement.clientHeight),
       });
+    } finally {
+      host.remove();
     }
   };
 
@@ -202,20 +234,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
     toast.loading('Generating PDF...');
     
     try {
-      // Hide no-print elements temporarily
-      const noPrintElements = invoiceRef.current.querySelectorAll('.no-print');
-      noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
-      
-      const canvas = await withUnscaledInvoice(() =>
-        html2canvas(invoiceRef.current!, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        })
-      );
-      
-      // Restore no-print elements
-      noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
+      const canvas = await captureInvoiceCanvas();
       
       const imgData = canvas.toDataURL('image/png');
       const paper = PAPER_SIZES[paperSize];
@@ -262,20 +281,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
     toast.loading('Generating JPEG...');
     
     try {
-      // Hide no-print elements temporarily
-      const noPrintElements = invoiceRef.current.querySelectorAll('.no-print');
-      noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
-      
-      const canvas = await withUnscaledInvoice(() =>
-        html2canvas(invoiceRef.current!, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: '#ffffff',
-        })
-      );
-      
-      // Restore no-print elements
-      noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
+      const canvas = await captureInvoiceCanvas();
       
       const link = document.createElement('a');
       link.download = `invoice-${invoiceNumber}.jpeg`;
