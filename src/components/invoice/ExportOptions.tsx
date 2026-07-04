@@ -34,6 +34,44 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
   const [fitOnePage, setFitOnePage] = useState(true);
   const [paperSize, setPaperSize] = useState<PaperSize>('A4');
 
+  // Temporarily neutralize the ResponsiveInvoiceFrame scale transform so
+  // html2canvas captures the invoice at its natural A4 size instead of the
+  // scaled-down preview (which causes overlapping/garbled text in exports).
+  const withUnscaledInvoice = async <T,>(fn: () => Promise<T>): Promise<T> => {
+    const el = invoiceRef.current;
+    if (!el) return fn();
+    // Walk up and cache any ancestor transforms we override.
+    const touched: { node: HTMLElement; transform: string; width: string; height: string; overflow: string }[] = [];
+    let node: HTMLElement | null = el.parentElement;
+    while (node && node !== document.body) {
+      const cs = window.getComputedStyle(node);
+      if (cs.transform && cs.transform !== 'none') {
+        touched.push({
+          node,
+          transform: node.style.transform,
+          width: node.style.width,
+          height: node.style.height,
+          overflow: node.style.overflow,
+        });
+        node.style.transform = 'none';
+        node.style.width = 'auto';
+        node.style.height = 'auto';
+        node.style.overflow = 'visible';
+      }
+      node = node.parentElement;
+    }
+    try {
+      return await fn();
+    } finally {
+      touched.forEach((t) => {
+        t.node.style.transform = t.transform;
+        t.node.style.width = t.width;
+        t.node.style.height = t.height;
+        t.node.style.overflow = t.overflow;
+      });
+    }
+  };
+
   const handlePrint = () => {
     if (!invoiceRef.current) return;
 
@@ -168,11 +206,13 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
       const noPrintElements = invoiceRef.current.querySelectorAll('.no-print');
       noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
       
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
+      const canvas = await withUnscaledInvoice(() =>
+        html2canvas(invoiceRef.current!, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        })
+      );
       
       // Restore no-print elements
       noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
@@ -226,11 +266,13 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ invoiceRef, invoiceNumber
       const noPrintElements = invoiceRef.current.querySelectorAll('.no-print');
       noPrintElements.forEach(el => (el as HTMLElement).style.display = 'none');
       
-      const canvas = await html2canvas(invoiceRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
+      const canvas = await withUnscaledInvoice(() =>
+        html2canvas(invoiceRef.current!, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        })
+      );
       
       // Restore no-print elements
       noPrintElements.forEach(el => (el as HTMLElement).style.display = '');
