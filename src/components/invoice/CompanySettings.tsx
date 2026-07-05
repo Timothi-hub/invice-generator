@@ -5,8 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CompanyProfile } from '@/types/invoice';
-import { Settings, Upload, X } from 'lucide-react';
+import { Settings, Upload, X, Download } from 'lucide-react';
 import { toast } from 'sonner';
+import { downloadErrorLog } from '@/lib/errorLogger';
+import { Link } from 'react-router-dom';
 
 interface CompanySettingsProps {
   profile: CompanyProfile;
@@ -158,6 +160,35 @@ const CompanySettings: React.FC<CompanySettingsProps> = ({ profile, onSave }) =>
           <Button onClick={handleSave} className="w-full btn-primary" disabled={saving}>
             {saving ? 'Saving...' : 'Save Settings'}
           </Button>
+
+          <div className="pt-4 border-t space-y-2">
+            <Label>Error Log</Label>
+            <p className="text-xs text-muted-foreground">
+              Download recent client-side errors or open the full log viewer.
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  downloadErrorLog();
+                  toast.success('Error log downloaded');
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" /> Download .txt
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                asChild
+                onClick={() => setOpen(false)}
+              >
+                <Link to="/error-log">View Log</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

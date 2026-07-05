@@ -1,4 +1,4 @@
-import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2, Eye } from 'lucide-react';
+import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2, Eye, AlertCircle } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
@@ -28,6 +28,7 @@ const menuItems = [
   { title: 'Reports', url: '/reports', icon: BarChart3 },
   { title: 'Data', url: '/data', icon: Download },
   { title: 'Collaborators', url: '/members', icon: UserCog },
+  { title: 'Error Log', url: '/error-log', icon: AlertCircle },
 ];
 
 export function AppSidebar() {

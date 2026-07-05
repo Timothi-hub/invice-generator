@@ -15,6 +15,7 @@ import InvoiceHistoryPage from "./pages/InvoiceHistoryPage";
 import SavedItemsPage from "./pages/SavedItemsPage";
 import MembersPage from "./pages/MembersPage";
 import PreviewPage from "./pages/PreviewPage";
+import ErrorLogPage from "./pages/ErrorLogPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -94,6 +95,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PreviewPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/error-log"
+              element={
+                <ProtectedRoute>
+                  <ErrorLogPage />
                 </ProtectedRoute>
               }
             />
