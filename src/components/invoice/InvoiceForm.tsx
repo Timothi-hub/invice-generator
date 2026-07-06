@@ -680,95 +680,40 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
       </div>
 
       {/* Additional Charges */}
-      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 flex items-center justify-center">
-            <Receipt className="w-4 h-4" />
+      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b">
+          <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 flex items-center justify-center">
+            <Receipt className="w-3.5 h-3.5" />
           </div>
-          <h3 className="font-semibold text-base md:text-lg text-violet-700 dark:text-violet-300">
+          <h3 className="font-bold text-xs md:text-sm text-violet-700 dark:text-violet-300 uppercase tracking-wider">
             Additional Charges
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="deliveryCharges">Delivery Charges (₹)</Label>
-            <Input
-              id="deliveryCharges"
-              type="number"
-              min="0"
-              step="0.01"
-              value={invoice.deliveryCharges}
-              onChange={(e) => updateField("deliveryCharges", parseFloat(e.target.value) || 0)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="designingCharges">Designing Charges (₹)</Label>
-            <Input
-              id="designingCharges"
-              type="number"
-              min="0"
-              step="0.01"
-              value={invoice.designingCharges}
-              onChange={(e) => updateField("designingCharges", parseFloat(e.target.value) || 0)}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b">
+          <ChargeRow label="Delivery Charges (₹)" id="deliveryCharges" value={invoice.deliveryCharges} onChange={(v) => updateField("deliveryCharges", v)} />
+          <ChargeRow label="Designing Charges (₹)" id="designingCharges" value={invoice.designingCharges} onChange={(v) => updateField("designingCharges", v)} />
         </div>
-        <div className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="discount">Discount (₹)</Label>
-            <Input
-              id="discount"
-              type="number"
-              min="0"
-              step="0.01"
-              value={invoice.discount}
-              onChange={(e) => updateField("discount", parseFloat(e.target.value) || 0)}
-              placeholder="Discount amount to subtract from total"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="advance">Advance Received (₹)</Label>
-            <Input
-              id="advance"
-              type="number"
-              min="0"
-              step="0.01"
-              value={invoice.advance}
-              onChange={(e) => updateField("advance", parseFloat(e.target.value) || 0)}
-              placeholder="Amount already paid by customer in advance"
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+          <ChargeRow label="Discount (₹)" id="discount" value={invoice.discount} onChange={(v) => updateField("discount", v)} />
+          <ChargeRow label="Advance Received (₹)" id="advance" value={invoice.advance} onChange={(v) => updateField("advance", v)} />
         </div>
-        <p className="text-xs text-muted-foreground">
-          This will be shown on the invoice and subtracted from the balance due.
-        </p>
       </div>
 
       {/* Expenses (for profit calculation) */}
-      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4" />
+      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b">
+          <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+            <TrendingUp className="w-3.5 h-3.5" />
           </div>
-          <h3 className="font-semibold text-base md:text-lg text-rose-700 dark:text-rose-300">
+          <h3 className="font-bold text-xs md:text-sm text-rose-700 dark:text-rose-300 uppercase tracking-wider">
             Expenses & Profit Tracking
           </h3>
         </div>
-        <p className="text-sm text-muted-foreground">This is for your records only and won't appear on the invoice.</p>
-
-        <div className="space-y-2">
-          <Label htmlFor="expenses">Total Expenses (₹)</Label>
-          <Input
-            id="expenses"
-            type="number"
-            min="0"
-            step="0.01"
-            value={invoice.expenses}
-            onChange={(e) => updateField("expenses", parseFloat(e.target.value) || 0)}
-            placeholder="Enter your costs"
-          />
-        </div>
+        <p className="text-xs text-muted-foreground px-4 py-2 bg-muted/20 border-b">
+          This is for your records only and won't appear on the invoice.
+        </p>
+        <ChargeRow label="Total Expenses (₹)" id="expenses" value={invoice.expenses} onChange={(v) => updateField("expenses", v)} />
       </div>
 
       {/* Terms */}
