@@ -737,3 +737,33 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 };
 
 export default InvoiceForm;
+
+const ChargeRow = ({
+  label,
+  id,
+  value,
+  onChange,
+}: {
+  label: string;
+  id: string;
+  value: number;
+  onChange: (v: number) => void;
+}) => (
+  <div className="flex items-stretch">
+    <label
+      htmlFor={id}
+      className="w-40 shrink-0 bg-muted/30 border-r px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider text-foreground/80"
+    >
+      {label}
+    </label>
+    <Input
+      id={id}
+      type="number"
+      min="0"
+      step="0.01"
+      value={value}
+      onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+      className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
+    />
+  </div>
+);
