@@ -330,131 +330,138 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   };
 
   return (
-    <div className="invoice-form-grid flex flex-col">
-      {/* Invoice Details */}
-      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/40 text-blue-600 flex items-center justify-center">
-            <FileText className="w-4 h-4" />
-          </div>
-          <h3 className="font-semibold text-base md:text-lg text-blue-700 dark:text-blue-300">Invoice Details</h3>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="invoiceNumber">Invoice Number</Label>
-            <div className="flex gap-2">
+    <div className="invoice-form-grid flex flex-col gap-4">
+      {/* Header table: Invoice + Customer combined */}
+      <div className="rounded-xl overflow-hidden border-2 border-[#0b1f4a] bg-white shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x-2 divide-[#0b1f4a]">
+          {/* Invoice Number */}
+          <div className="flex items-stretch bg-slate-50">
+            <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
+              Invoice Number
+            </div>
+            <div className="flex-1 flex items-center gap-1 px-2">
               <Input
                 id="invoiceNumber"
                 value={invoice.invoiceNumber}
                 onChange={(e) => updateField("invoiceNumber", e.target.value)}
                 placeholder="INV-0001"
-                className={showDuplicateWarning ? "border-warning focus-visible:ring-warning" : ""}
+                className={cn(
+                  "h-8 border-0 shadow-none focus-visible:ring-0 px-1 bg-transparent",
+                  showDuplicateWarning && "text-warning",
+                )}
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon"
+                className="h-7 w-7 shrink-0"
                 onClick={generateNextInvoiceNumber}
-                title="Auto-generate next invoice number"
+                title="Auto-generate"
               >
-                <Wand2 className="w-4 h-4" />
+                <Wand2 className="w-3.5 h-3.5" />
               </Button>
             </div>
-            {showDuplicateWarning && duplicateInvoice && (
-              <div className="flex items-start gap-2 p-2 bg-warning/10 border border-warning/30 rounded-md text-warning text-sm">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>
-                  Invoice #{duplicateInvoice.number} already exists for customer "{duplicateInvoice.customerName}"
-                </span>
-              </div>
-            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="invoiceDate">Date</Label>
-            <div className="relative">
+          {/* Date */}
+          <div className="flex items-stretch bg-slate-50">
+            <div className="w-24 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
+              Date
+            </div>
+            <div className="flex-1 flex items-center px-2">
               <Input
                 id="invoiceDate"
                 type="date"
                 value={invoice.invoiceDate}
                 onChange={(e) => updateField("invoiceDate", e.target.value)}
+                className="h-8 border-0 shadow-none focus-visible:ring-0 px-1 bg-transparent"
               />
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Customer Details */}
-      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
-            <User className="w-4 h-4" />
+        {showDuplicateWarning && duplicateInvoice && (
+          <div className="flex items-start gap-2 px-3 py-2 bg-warning/10 border-t-2 border-[#0b1f4a] text-warning text-xs">
+            <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <span>
+              Invoice #{duplicateInvoice.number} already exists for "{duplicateInvoice.customerName}"
+            </span>
           </div>
-          <h3 className="font-semibold text-base md:text-lg text-emerald-700 dark:text-emerald-300">
-            Customer Details
-          </h3>
-        </div>
+        )}
 
-        <div className="space-y-4">
-          <div className="space-y-2 relative" ref={customerWrapperRef}>
-            <Label htmlFor="customerName">Customer Name</Label>
-            <Input
-              id="customerName"
-              value={invoice.customerName}
-              onChange={(e) => {
-                updateField("customerName", e.target.value);
-                setShowCustomerSuggestions(true);
-              }}
-              onFocus={() => setShowCustomerSuggestions(true)}
-              autoComplete="off"
-              placeholder="Customer name"
-            />
-            {showCustomerSuggestions && customerSuggestions.length > 0 && (
-              <div className="absolute z-20 mt-1 w-full bg-popover border rounded-md shadow-lg max-h-56 overflow-auto">
-                {customerSuggestions.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => {
-                      onChange({
-                        ...invoice,
-                        customerName: c.name,
-                        customerAddress: c.address || invoice.customerAddress,
-                        customerPhone: c.phone || invoice.customerPhone || '',
-                      });
-                      setShowCustomerSuggestions(false);
-                    }}
-                    className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
-                  >
-                    <div className="font-medium">{c.name}</div>
-                    {c.address && <div className="text-xs text-muted-foreground truncate">{c.address}</div>}
-                  </button>
-                ))}
-              </div>
-            )}
+        <div className="grid grid-cols-1 md:grid-cols-2 border-t-2 border-[#0b1f4a] divide-y md:divide-y-0 md:divide-x-2 divide-[#0b1f4a]">
+          {/* Customer name */}
+          <div className="flex items-stretch bg-white" ref={customerWrapperRef}>
+            <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
+              Customer Name
+            </div>
+            <div className="flex-1 relative">
+              <Input
+                id="customerName"
+                value={invoice.customerName}
+                onChange={(e) => {
+                  updateField("customerName", e.target.value);
+                  setShowCustomerSuggestions(true);
+                }}
+                onFocus={() => setShowCustomerSuggestions(true)}
+                autoComplete="off"
+                placeholder="Customer name"
+                className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
+              />
+              {showCustomerSuggestions && customerSuggestions.length > 0 && (
+                <div className="absolute z-20 mt-1 left-0 right-0 bg-popover border rounded-md shadow-lg max-h-56 overflow-auto">
+                  {customerSuggestions.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        onChange({
+                          ...invoice,
+                          customerName: c.name,
+                          customerAddress: c.address || invoice.customerAddress,
+                          customerPhone: c.phone || invoice.customerPhone || '',
+                        });
+                        setShowCustomerSuggestions(false);
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-accent text-sm"
+                    >
+                      <div className="font-medium">{c.name}</div>
+                      {c.address && <div className="text-xs text-muted-foreground truncate">{c.address}</div>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="customerAddress">Address</Label>
+          {/* Address */}
+          <div className="flex items-stretch bg-white">
+            <div className="w-24 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
+              Address
+            </div>
             <Textarea
               id="customerAddress"
               value={invoice.customerAddress}
               onChange={(e) => updateField("customerAddress", e.target.value)}
               placeholder="Customer address"
-              rows={3}
+              rows={1}
+              className="min-h-9 border-0 shadow-none focus-visible:ring-0 rounded-none resize-none py-2"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="customerPhone">Mobile Number</Label>
-            <Input
-              id="customerPhone"
-              type="tel"
-              value={invoice.customerPhone || ''}
-              onChange={(e) => updateField('customerPhone', e.target.value)}
-              placeholder="+91 XXXXX XXXXX"
-              inputMode="tel"
-              autoComplete="tel"
-            />
+        </div>
+
+        <div className="border-t-2 border-[#0b1f4a] flex items-stretch bg-white">
+          <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
+            Mobile Number
           </div>
+          <Input
+            id="customerPhone"
+            type="tel"
+            value={invoice.customerPhone || ''}
+            onChange={(e) => updateField('customerPhone', e.target.value)}
+            placeholder="+91 XXXXX XXXXX"
+            inputMode="tel"
+            autoComplete="tel"
+            className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
+          />
         </div>
       </div>
 
