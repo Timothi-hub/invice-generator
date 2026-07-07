@@ -5,6 +5,26 @@
 const STORAGE_KEY = "app_error_log";
 const MAX_ENTRIES = 200;
 
+// Lazy import to avoid circular init issues
+async function pushToServer(entry: ErrorLogEntry) {
+  try {
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("error_logs").insert({
+      user_id: user.id,
+      type: entry.type,
+      message: entry.message?.slice(0, 4000) ?? "",
+      stack: entry.stack?.slice(0, 8000),
+      source: entry.source,
+      url: entry.url,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+    });
+  } catch {
+    /* swallow */
+  }
+}
+
 export type ErrorLogEntry = {
   timestamp: string;
   type: "error" | "unhandledrejection" | "console.error" | "manual";
@@ -43,6 +63,7 @@ export function logError(entry: Omit<ErrorLogEntry, "timestamp" | "url"> & { url
   const entries = read();
   entries.push(full);
   write(entries);
+  void pushToServer(full);
 }
 
 export function getErrorLog(): ErrorLogEntry[] {

@@ -1,7 +1,8 @@
-import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2, Eye, AlertCircle } from 'lucide-react';
+import { FileText, Users, BarChart3, Download, Upload, LogOut, Settings, History, Package, UserCog, Building2, Eye, AlertCircle, ShieldCheck } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Sidebar,
@@ -36,6 +37,11 @@ export function AppSidebar() {
   const { workspaces, activeOwnerId, setActiveOwnerId } = useWorkspace();
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
+  const { isAdmin } = useIsAdmin();
+
+  const items = isAdmin
+    ? [...menuItems, { title: 'Admin Dashboard', url: '/admin', icon: ShieldCheck }]
+    : menuItems;
 
   const handleSignOut = async () => {
     await signOut();
@@ -82,7 +88,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
