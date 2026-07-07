@@ -16,6 +16,7 @@ import SavedItemsPage from "./pages/SavedItemsPage";
 import MembersPage from "./pages/MembersPage";
 import PreviewPage from "./pages/PreviewPage";
 import ErrorLogPage from "./pages/ErrorLogPage";
+import AdminPage from "./pages/AdminPage";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -103,6 +104,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ErrorLogPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
                 </ProtectedRoute>
               }
             />
