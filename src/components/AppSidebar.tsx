@@ -41,7 +41,7 @@ export function AppSidebar() {
 
   const items = isAdmin
     ? [...menuItems, { title: 'Admin Dashboard', url: '/admin', icon: ShieldCheck }]
-    : menuItems;
+    : menuItems.filter((i) => i.url !== '/error-log');
 
   const handleSignOut = async () => {
     await signOut();
