@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import AppLayout from '@/components/AppLayout';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -21,12 +23,16 @@ const typeColors: Record<ErrorLogEntry['type'], string> = {
 
 const ErrorLogPage = () => {
   const [entries, setEntries] = useState<ErrorLogEntry[]>([]);
+  const { isAdmin, loading: adminLoading } = useIsAdmin();
 
   const refresh = () => setEntries([...getErrorLog()].reverse());
 
   useEffect(() => {
     refresh();
   }, []);
+
+  if (adminLoading) return <AppLayout title="Error Log"><p className="text-muted-foreground">Loading…</p></AppLayout>;
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   const handleClear = () => {
     clearErrorLog();

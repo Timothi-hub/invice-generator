@@ -353,6 +353,7 @@ export type Database = {
         Returns: {
           created_at: string
           email: string
+          expires_at: string
           invoice_count: number
           is_admin: boolean
           user_id: string
