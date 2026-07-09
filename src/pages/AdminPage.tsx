@@ -5,12 +5,22 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search } from "lucide-react";
+import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search, Save, Activity } from "lucide-react";
 
 type Stats = {
   total_users: number;
@@ -38,6 +48,7 @@ type UserRow = {
   user_id: string;
   email: string;
   created_at: string;
+  last_sign_in_at: string | null;
   is_admin: boolean;
   invoice_count: number;
   expires_at: string | null;
@@ -69,7 +80,15 @@ const AdminPage = () => {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [expiryFilter, setExpiryFilter] = useState<"all" | "active" | "expired" | "none">("all");
-  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "email" | "invoices" | "expiry">("created_desc");
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "email" | "invoices" | "expiry" | "active">("created_desc");
+  // per-row draft expiry values (yyyy-mm-dd) keyed by user_id
+  const [expiryDrafts, setExpiryDrafts] = useState<Record<string, string>>({});
+  const [savingExpiry, setSavingExpiry] = useState<string | null>(null);
+  const [confirm, setConfirm] = useState<
+    | null
+    | { kind: "revoke" | "delete" | "clear-errors"; user?: UserRow }
+  >(null);
+  const [lastRevoked, setLastRevoked] = useState<UserRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -115,6 +134,8 @@ const AdminPage = () => {
           return b.invoice_count - a.invoice_count;
         case "expiry":
           return (a.expires_at ? +new Date(a.expires_at) : Infinity) - (b.expires_at ? +new Date(b.expires_at) : Infinity);
+        case "active":
+          return (b.last_sign_in_at ? +new Date(b.last_sign_in_at) : 0) - (a.last_sign_in_at ? +new Date(a.last_sign_in_at) : 0);
         default:
           return +new Date(b.created_at) - +new Date(a.created_at);
       }
@@ -158,7 +179,6 @@ const AdminPage = () => {
   };
 
   const clearErrors = async () => {
-    if (!confirm("Delete ALL error logs?")) return;
     const { error } = await supabase.from("error_logs").delete().not("id", "is", null);
     if (error) return toast.error(error.message);
     toast.success("Errors cleared");
@@ -176,10 +196,21 @@ const AdminPage = () => {
   };
 
   const revokeAdmin = async (u: UserRow) => {
-    if (!confirm(`Revoke admin from ${u.email}?`)) return;
     const { error } = await (supabase.rpc as any)("admin_revoke_admin", { _user_id: u.user_id });
     if (error) return toast.error(error.message);
-    toast.success("Admin revoked");
+    setLastRevoked(u);
+    toast.success(`Admin revoked from ${u.email}`, {
+      action: {
+        label: "Undo",
+        onClick: async () => {
+          const { error: e2 } = await (supabase.rpc as any)("admin_grant_admin_by_email", { _email: u.email });
+          if (e2) return toast.error(e2.message);
+          toast.success("Admin restored");
+          load();
+        },
+      },
+      duration: 8000,
+    });
     load();
   };
 
@@ -191,25 +222,62 @@ const AdminPage = () => {
   };
 
   const deleteUser = async (u: UserRow) => {
-    if (!confirm(`Permanently delete account ${u.email}? This cannot be undone.`)) return;
     const { error } = await (supabase.rpc as any)("admin_delete_user", { _user_id: u.user_id });
     if (error) return toast.error(error.message);
     toast.success("Account deleted");
     load();
   };
 
-  const setExpiry = async (u: UserRow, value: string) => {
-    const iso = value ? new Date(value).toISOString() : null;
+  const saveExpiry = async (u: UserRow) => {
+    const draft = expiryDrafts[u.user_id] ?? toDateInput(u.expires_at);
+    let iso: string | null = null;
+    if (draft) {
+      const parsed = new Date(draft + "T23:59:59");
+      if (isNaN(parsed.getTime())) {
+        toast.error("Invalid date");
+        return;
+      }
+      if (parsed.getTime() < Date.now() - 24 * 60 * 60 * 1000) {
+        toast.error("Expiry date cannot be in the past");
+        return;
+      }
+      iso = parsed.toISOString();
+    }
+    setSavingExpiry(u.user_id);
     const { error } = await (supabase.rpc as any)("admin_set_expiry", {
       _user_id: u.user_id,
       _expires_at: iso,
     });
+    setSavingExpiry(null);
     if (error) return toast.error(error.message);
-    toast.success(iso ? "Expiry updated" : "Expiry cleared");
+    toast.success(iso ? `Expiry set for ${u.email}` : `Expiry cleared for ${u.email}`);
+    setExpiryDrafts((d) => {
+      const n = { ...d };
+      delete n[u.user_id];
+      return n;
+    });
+    load();
+  };
+
+  const clearExpiry = async (u: UserRow) => {
+    setSavingExpiry(u.user_id);
+    const { error } = await (supabase.rpc as any)("admin_set_expiry", {
+      _user_id: u.user_id,
+      _expires_at: null,
+    });
+    setSavingExpiry(null);
+    if (error) return toast.error(error.message);
+    toast.success(`Expiry cleared for ${u.email}`);
+    setExpiryDrafts((d) => {
+      const n = { ...d };
+      delete n[u.user_id];
+      return n;
+    });
     load();
   };
 
   const toDateInput = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 10) : "");
+  const todayInput = new Date().toISOString().slice(0, 10);
 
   return (
     <AppLayout title="Admin Dashboard">
@@ -293,6 +361,7 @@ const AdminPage = () => {
                   <SelectItem value="email">Email A–Z</SelectItem>
                   <SelectItem value="invoices">Most invoices</SelectItem>
                   <SelectItem value="expiry">Expiry soonest</SelectItem>
+                  <SelectItem value="active">Recently active</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -302,6 +371,7 @@ const AdminPage = () => {
                   <tr>
                     <th className="py-2 pr-2">Email</th>
                     <th className="py-2 pr-2">Joined</th>
+                    <th className="py-2 pr-2">Last active</th>
                     <th className="py-2 pr-2">Invoices</th>
                     <th className="py-2 pr-2">Role</th>
                     <th className="py-2 pr-2">Expires</th>
@@ -312,10 +382,18 @@ const AdminPage = () => {
                   {filteredUsers.map((u) => {
                     const isSelf = u.user_id === currentUser?.id;
                     const expired = u.expires_at && new Date(u.expires_at).getTime() < Date.now();
+                    const draft = expiryDrafts[u.user_id] ?? toDateInput(u.expires_at);
+                    const dirty = draft !== toDateInput(u.expires_at);
                     return (
                       <tr key={u.user_id} className="border-b last:border-0 align-middle">
                         <td className="py-2 pr-2">{u.email}{isSelf && <span className="text-xs text-muted-foreground ml-1">(you)</span>}</td>
                         <td className="py-2 pr-2 whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
+                        <td className="py-2 pr-2 whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1 text-xs">
+                            <Activity className="w-3 h-3 text-muted-foreground" />
+                            {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : <span className="text-muted-foreground">never</span>}
+                          </span>
+                        </td>
                         <td className="py-2 pr-2">{u.invoice_count}</td>
                         <td className="py-2 pr-2">
                           {u.is_admin ? (
@@ -329,12 +407,23 @@ const AdminPage = () => {
                             <CalendarClock className={`w-3.5 h-3.5 ${expired ? "text-red-600" : "text-muted-foreground"}`} />
                             <Input
                               type="date"
-                              value={toDateInput(u.expires_at)}
-                              onChange={(e) => setExpiry(u, e.target.value)}
+                              value={draft}
+                              min={todayInput}
+                              onChange={(e) => setExpiryDrafts((d) => ({ ...d, [u.user_id]: e.target.value }))}
                               className="h-8 w-36"
                             />
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="h-8"
+                              onClick={() => saveExpiry(u)}
+                              disabled={!dirty || savingExpiry === u.user_id}
+                              title="Set expiry"
+                            >
+                              <Save className="w-3.5 h-3.5 mr-1" /> Set
+                            </Button>
                             {u.expires_at && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setExpiry(u, "")} title="Clear expiry">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => clearExpiry(u)} disabled={savingExpiry === u.user_id} title="Clear expiry">
                                 <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             )}
@@ -344,7 +433,7 @@ const AdminPage = () => {
                         <td className="py-2 pr-2">
                           <div className="flex gap-1">
                             {u.is_admin ? (
-                              <Button variant="outline" size="sm" onClick={() => revokeAdmin(u)} disabled={isSelf}>
+                              <Button variant="outline" size="sm" onClick={() => setConfirm({ kind: "revoke", user: u })} disabled={isSelf}>
                                 <UserMinus className="w-3.5 h-3.5 mr-1" /> Revoke
                               </Button>
                             ) : (
@@ -352,7 +441,7 @@ const AdminPage = () => {
                                 <UserPlus className="w-3.5 h-3.5 mr-1" /> Make Admin
                               </Button>
                             )}
-                            <Button variant="destructive" size="sm" onClick={() => deleteUser(u)} disabled={isSelf}>
+                            <Button variant="destructive" size="sm" onClick={() => setConfirm({ kind: "delete", user: u })} disabled={isSelf}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </div>
@@ -378,7 +467,7 @@ const AdminPage = () => {
               <Button variant="outline" size="sm" onClick={downloadErrors} disabled={errors.length === 0}>
                 <Download className="w-4 h-4 mr-1" /> Download .txt
               </Button>
-              <Button variant="destructive" size="sm" onClick={clearErrors} disabled={errors.length === 0}>
+              <Button variant="destructive" size="sm" onClick={() => setConfirm({ kind: "clear-errors" })} disabled={errors.length === 0}>
                 <Trash2 className="w-4 h-4 mr-1" /> Clear
               </Button>
             </div>
@@ -413,6 +502,53 @@ const AdminPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirm?.kind === "revoke" && "Revoke admin privileges?"}
+              {confirm?.kind === "delete" && "Permanently delete account?"}
+              {confirm?.kind === "clear-errors" && "Delete all error logs?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirm?.kind === "revoke" && (
+                <>
+                  <strong>{confirm.user?.email}</strong> will lose admin access. You can undo this
+                  from the toast that appears after confirming.
+                </>
+              )}
+              {confirm?.kind === "delete" && (
+                <>
+                  This will permanently delete <strong>{confirm.user?.email}</strong> and all of their
+                  invoices, customers, and saved items. This action cannot be undone.
+                </>
+              )}
+              {confirm?.kind === "clear-errors" && (
+                <>Every entry in the error log will be removed. This cannot be undone.</>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const c = confirm;
+                setConfirm(null);
+                if (!c) return;
+                if (c.kind === "revoke" && c.user) await revokeAdmin(c.user);
+                if (c.kind === "delete" && c.user) await deleteUser(c.user);
+                if (c.kind === "clear-errors") await clearErrors();
+              }}
+              className={confirm?.kind === "delete" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {confirm?.kind === "revoke" && "Revoke"}
+              {confirm?.kind === "delete" && "Delete permanently"}
+              {confirm?.kind === "clear-errors" && "Clear all"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };
