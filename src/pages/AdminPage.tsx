@@ -94,6 +94,34 @@ const AdminPage = () => {
     }
   }, [adminLoading, bootstrapped]);
 
+  const filteredUsers = useMemo(() => {
+    const now = Date.now();
+    let out = users.filter((u) => {
+      if (search && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
+      if (roleFilter === "admin" && !u.is_admin) return false;
+      if (roleFilter === "user" && u.is_admin) return false;
+      if (expiryFilter === "none" && u.expires_at) return false;
+      if (expiryFilter === "active" && (!u.expires_at || new Date(u.expires_at).getTime() < now)) return false;
+      if (expiryFilter === "expired" && (!u.expires_at || new Date(u.expires_at).getTime() >= now)) return false;
+      return true;
+    });
+    out = [...out].sort((a, b) => {
+      switch (sortBy) {
+        case "created_asc":
+          return +new Date(a.created_at) - +new Date(b.created_at);
+        case "email":
+          return a.email.localeCompare(b.email);
+        case "invoices":
+          return b.invoice_count - a.invoice_count;
+        case "expiry":
+          return (a.expires_at ? +new Date(a.expires_at) : Infinity) - (b.expires_at ? +new Date(b.expires_at) : Infinity);
+        default:
+          return +new Date(b.created_at) - +new Date(a.created_at);
+      }
+    });
+    return out;
+  }, [users, search, roleFilter, expiryFilter, sortBy]);
+
   if (adminLoading) {
     return (
       <AppLayout title="Admin">
@@ -180,34 +208,6 @@ const AdminPage = () => {
     toast.success(iso ? "Expiry updated" : "Expiry cleared");
     load();
   };
-
-  const filteredUsers = useMemo(() => {
-    const now = Date.now();
-    let out = users.filter((u) => {
-      if (search && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
-      if (roleFilter === "admin" && !u.is_admin) return false;
-      if (roleFilter === "user" && u.is_admin) return false;
-      if (expiryFilter === "none" && u.expires_at) return false;
-      if (expiryFilter === "active" && (!u.expires_at || new Date(u.expires_at).getTime() < now)) return false;
-      if (expiryFilter === "expired" && (!u.expires_at || new Date(u.expires_at).getTime() >= now)) return false;
-      return true;
-    });
-    out = [...out].sort((a, b) => {
-      switch (sortBy) {
-        case "created_asc":
-          return +new Date(a.created_at) - +new Date(b.created_at);
-        case "email":
-          return a.email.localeCompare(b.email);
-        case "invoices":
-          return b.invoice_count - a.invoice_count;
-        case "expiry":
-          return (a.expires_at ? +new Date(a.expires_at) : Infinity) - (b.expires_at ? +new Date(b.expires_at) : Infinity);
-        default:
-          return +new Date(b.created_at) - +new Date(a.created_at);
-      }
-    });
-    return out;
-  }, [users, search, roleFilter, expiryFilter, sortBy]);
 
   const toDateInput = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 10) : "");
 
