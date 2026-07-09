@@ -209,6 +209,7 @@ const AdminPage = () => {
     load();
   };
 
+  const toDateInput = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 10) : "");
 
   return (
     <AppLayout title="Admin Dashboard">
