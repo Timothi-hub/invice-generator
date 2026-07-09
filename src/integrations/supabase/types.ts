@@ -321,6 +321,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_account_status: {
+        Row: {
+          expires_at: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -347,7 +368,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
       admin_get_stats: { Args: never; Returns: Json }
+      admin_grant_admin_by_email: {
+        Args: { _email: string }
+        Returns: undefined
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -356,11 +382,18 @@ export type Database = {
           expires_at: string
           invoice_count: number
           is_admin: boolean
+          last_sign_in_at: string
           user_id: string
         }[]
       }
+      admin_revoke_admin: { Args: { _user_id: string }; Returns: undefined }
+      admin_set_expiry: {
+        Args: { _expires_at: string; _user_id: string }
+        Returns: undefined
+      }
       can_access_account: { Args: { _owner: string }; Returns: boolean }
       current_user_email: { Args: never; Returns: string }
+      get_my_account_status: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
