@@ -8,58 +8,56 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 200 25% 15%;
+    /* Deep midnight-purple theme (matches reference layout) */
+    --background: 240 45% 4%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 200 25% 15%;
+    --card: 240 40% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 200 25% 15%;
+    --popover: 240 40% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 195 75% 20%;
+    --primary: 262 83% 62%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 185 45% 85%;
-    --secondary-foreground: 195 75% 20%;
+    --secondary: 240 30% 16%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 200 15% 94%;
-    --muted-foreground: 200 10% 45%;
+    --muted: 240 30% 14%;
+    --muted-foreground: 240 10% 65%;
 
-    --accent: 175 55% 70%;
-    --accent-foreground: 195 75% 15%;
+    --accent: 262 60% 55%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 20% 88%;
-    --input: 200 20% 88%;
-    --ring: 195 75% 25%;
+    --border: 240 30% 18%;
+    --input: 240 30% 16%;
+    --ring: 262 83% 62%;
 
     --radius: 0.5rem;
 
-    /* Invoice specific colors */
-    --invoice-header: 195 75% 22%;
-    --invoice-accent: 185 50% 65%;
-    --invoice-table-header: 185 45% 50%;
-    --invoice-footer: 195 75% 22%;
+    --invoice-header: 262 60% 40%;
+    --invoice-accent: 262 70% 65%;
+    --invoice-table-header: 262 55% 45%;
+    --invoice-footer: 262 60% 40%;
 
-    /* Success/Profit */
-    --success: 145 65% 42%;
+    --success: 152 70% 45%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning/Expense */
-    --warning: 35 90% 55%;
+    --warning: 38 92% 55%;
     --warning-foreground: 0 0% 10%;
 
-    --sidebar-background: 195 75% 22%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 185 50% 65%;
-    --sidebar-primary-foreground: 195 75% 15%;
-    --sidebar-accent: 195 60% 30%;
+    --sidebar-background: 240 45% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 262 83% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 30% 14%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 195 60% 35%;
-    --sidebar-ring: 185 50% 65%;
+    --sidebar-border: 240 30% 18%;
+    --sidebar-ring: 262 83% 62%;
   }
 
   .dark {
