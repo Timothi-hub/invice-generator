@@ -17,6 +17,11 @@ import {
   Receipt,
   TrendingUp,
   ScrollText,
+  ShoppingCart,
+  Upload,
+  ChevronRight,
+  Pencil,
+  Calendar as CalendarIcon,
 } from "lucide-react";
 import { useInvoices } from "@/hooks/useInvoices";
 import { useSavedItems } from "@/hooks/useSavedItems";
@@ -330,57 +335,45 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
   };
 
   return (
-    <div className="invoice-form-grid flex flex-col gap-4">
-      {/* Header table: Invoice + Customer combined */}
-      <div className="rounded-xl overflow-hidden border-2 border-[#0b1f4a] bg-white shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x-2 divide-[#0b1f4a]">
-          {/* Invoice Number */}
-          <div className="flex items-stretch bg-slate-50">
-            <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
-              Invoice Number
-            </div>
-            <div className="flex-1 flex items-center gap-1 px-2">
-              <Input
-                id="invoiceNumber"
-                value={invoice.invoiceNumber}
-                onChange={(e) => updateField("invoiceNumber", e.target.value)}
-                placeholder="INV-0001"
-                className={cn(
-                  "h-8 border-0 shadow-none focus-visible:ring-0 px-1 bg-transparent",
-                  showDuplicateWarning && "text-warning",
-                )}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0"
-                onClick={generateNextInvoiceNumber}
-                title="Auto-generate"
-              >
-                <Wand2 className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          </div>
-          {/* Date */}
-          <div className="flex items-stretch bg-slate-50">
-            <div className="w-24 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
-              Date
-            </div>
-            <div className="flex-1 flex items-center px-2">
-              <Input
-                id="invoiceDate"
-                type="date"
-                value={invoice.invoiceDate}
-                onChange={(e) => updateField("invoiceDate", e.target.value)}
-                className="h-8 border-0 shadow-none focus-visible:ring-0 px-1 bg-transparent"
-              />
-            </div>
-          </div>
+    <div className="flex flex-col gap-4">
+      {/* Header card: Invoice + Customer combined */}
+      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-border">
+          <HeaderField label="Invoice Number">
+            <Input
+              id="invoiceNumber"
+              value={invoice.invoiceNumber}
+              onChange={(e) => updateField("invoiceNumber", e.target.value)}
+              placeholder="INV-0001"
+              className={cn(
+                "h-10 border-0 shadow-none focus-visible:ring-0 bg-transparent",
+                showDuplicateWarning && "text-warning",
+              )}
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 mr-1 text-muted-foreground"
+              onClick={generateNextInvoiceNumber}
+              title="Auto-generate"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </Button>
+          </HeaderField>
+          <HeaderField label="Invoice Date">
+            <Input
+              id="invoiceDate"
+              type="date"
+              value={invoice.invoiceDate}
+              onChange={(e) => updateField("invoiceDate", e.target.value)}
+              className="h-10 border-0 shadow-none focus-visible:ring-0 bg-transparent"
+            />
+          </HeaderField>
         </div>
 
         {showDuplicateWarning && duplicateInvoice && (
-          <div className="flex items-start gap-2 px-3 py-2 bg-warning/10 border-t-2 border-[#0b1f4a] text-warning text-xs">
+          <div className="flex items-start gap-2 px-3 py-2 bg-warning/10 border-t text-warning text-xs">
             <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
             <span>
               Invoice #{duplicateInvoice.number} already exists for "{duplicateInvoice.customerName}"
@@ -388,12 +381,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 border-t-2 border-[#0b1f4a] divide-y md:divide-y-0 md:divide-x-2 divide-[#0b1f4a]">
-          {/* Customer name */}
-          <div className="flex items-stretch bg-white" ref={customerWrapperRef}>
-            <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
-              Customer Name
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 border-t divide-y md:divide-y-0 md:divide-x divide-border">
+          <HeaderField label="Customer Name" wrapperRef={customerWrapperRef}>
             <div className="flex-1 relative">
               <Input
                 id="customerName"
@@ -404,8 +393,8 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 }}
                 onFocus={() => setShowCustomerSuggestions(true)}
                 autoComplete="off"
-                placeholder="Customer name"
-                className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
+                placeholder="Enter customer name"
+                className="h-10 border-0 shadow-none focus-visible:ring-0 bg-transparent"
               />
               {showCustomerSuggestions && customerSuggestions.length > 0 && (
                 <div className="absolute z-20 mt-1 left-0 right-0 bg-popover border rounded-md shadow-lg max-h-56 overflow-auto">
@@ -431,52 +420,75 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
                 </div>
               )}
             </div>
-          </div>
-          {/* Address */}
-          <div className="flex items-stretch bg-white">
-            <div className="w-24 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
-              Address
-            </div>
+          </HeaderField>
+          <HeaderField label="Mobile Number">
+            <Input
+              id="customerPhone"
+              type="tel"
+              value={invoice.customerPhone || ''}
+              onChange={(e) => updateField('customerPhone', e.target.value)}
+              placeholder="+91 X XXXX XXXXX"
+              inputMode="tel"
+              autoComplete="tel"
+              className="h-10 border-0 shadow-none focus-visible:ring-0 bg-transparent"
+            />
+          </HeaderField>
+        </div>
+
+        <div className="border-t">
+          <HeaderField label="Address" align="start">
             <Textarea
               id="customerAddress"
               value={invoice.customerAddress}
               onChange={(e) => updateField("customerAddress", e.target.value)}
-              placeholder="Customer address"
-              rows={1}
-              className="min-h-9 border-0 shadow-none focus-visible:ring-0 rounded-none resize-none py-2"
+              placeholder="Enter customer address"
+              rows={2}
+              className="min-h-[3rem] border-0 shadow-none focus-visible:ring-0 resize-none bg-transparent"
             />
-          </div>
-        </div>
-
-        <div className="border-t-2 border-[#0b1f4a] flex items-stretch bg-white">
-          <div className="w-40 shrink-0 bg-[#0b1f4a] text-white px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider">
-            Mobile Number
-          </div>
-          <Input
-            id="customerPhone"
-            type="tel"
-            value={invoice.customerPhone || ''}
-            onChange={(e) => updateField('customerPhone', e.target.value)}
-            placeholder="+91 XXXXX XXXXX"
-            inputMode="tel"
-            autoComplete="tel"
-            className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
-          />
+          </HeaderField>
         </div>
       </div>
 
       {/* Items */}
       <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-950/40 text-orange-600 flex items-center justify-center">
-              <Package className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-lg bg-violet-500/15 text-violet-400 flex items-center justify-center">
+              <ShoppingCart className="w-4 h-4" />
             </div>
-            <h3 className="font-semibold text-base md:text-lg text-orange-700 dark:text-orange-300">Items</h3>
+            <h3 className="font-semibold text-base md:text-lg text-foreground">Items</h3>
           </div>
-          <Button type="button" onClick={addItem} size="sm" variant="outline">
-            <Plus className="w-4 h-4 mr-1" /> Add Item
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button type="button" onClick={addItem} size="sm" variant="outline">
+              <Plus className="w-4 h-4 mr-1" /> Add Item
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={addItem} title="Import from saved items">
+              <Upload className="w-4 h-4 mr-1" /> Import Items
+            </Button>
+            {invoice.items.length > 0 && (
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="h-9 w-9 text-destructive hover:text-destructive"
+                onClick={() => updateField("items", [])}
+                title="Clear all items"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Items table header */}
+        <div className="hidden md:grid grid-cols-[2rem_1fr_5rem_6rem_6rem_6rem_5rem] gap-2 px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+          <span>#</span>
+          <span>Item / Description</span>
+          <span>Qty</span>
+          <span>Rate (₹)</span>
+          <span>Discount (₹)</span>
+          <span>Amount (₹)</span>
+          <span>Action</span>
         </div>
 
         <div className="space-y-3">
@@ -674,55 +686,55 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
           })}
 
           {invoice.items.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">No items yet. Click "Add Item" to get started.</div>
+            <div className="flex flex-col items-center justify-center py-10 text-center">
+              <div className="w-14 h-14 rounded-full bg-violet-500/15 text-violet-400 flex items-center justify-center mb-3">
+                <ShoppingCart className="w-6 h-6" />
+              </div>
+              <p className="text-sm font-semibold text-violet-400">No items added yet</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Click "Add Item" to start adding items to the invoice.
+              </p>
+            </div>
           )}
         </div>
       </div>
 
       {/* Additional Charges */}
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b">
-          <div className="w-7 h-7 rounded-lg bg-violet-100 dark:bg-violet-950/40 text-violet-600 flex items-center justify-center">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-lg bg-violet-500/15 text-violet-400 flex items-center justify-center">
             <Receipt className="w-3.5 h-3.5" />
           </div>
-          <h3 className="font-bold text-xs md:text-sm text-violet-700 dark:text-violet-300 uppercase tracking-wider">
-            Additional Charges
-          </h3>
+          <h3 className="font-semibold text-sm text-violet-400">Additional Charges</h3>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x border-b">
-          <ChargeRow label="Delivery Charges (₹)" id="deliveryCharges" value={invoice.deliveryCharges} onChange={(v) => updateField("deliveryCharges", v)} />
-          <ChargeRow label="Designing Charges (₹)" id="designingCharges" value={invoice.designingCharges} onChange={(v) => updateField("designingCharges", v)} />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
-          <ChargeRow label="Discount (₹)" id="discount" value={invoice.discount} onChange={(v) => updateField("discount", v)} />
-          <ChargeRow label="Advance Received (₹)" id="advance" value={invoice.advance} onChange={(v) => updateField("advance", v)} />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <ChargeCol label="Delivery Charges (₹)" id="deliveryCharges" value={invoice.deliveryCharges} onChange={(v) => updateField("deliveryCharges", v)} />
+          <ChargeCol label="Designing Charges (₹)" id="designingCharges" value={invoice.designingCharges} onChange={(v) => updateField("designingCharges", v)} />
+          <ChargeCol label="Discount (₹)" id="discount" value={invoice.discount} onChange={(v) => updateField("discount", v)} />
+          <ChargeCol label="Advance Received (₹)" id="advance" value={invoice.advance} onChange={(v) => updateField("advance", v)} />
         </div>
       </div>
 
       {/* Expenses (for profit calculation) */}
-      <div className="bg-card rounded-xl border shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-muted/40 border-b">
-          <div className="w-7 h-7 rounded-lg bg-rose-100 dark:bg-rose-950/40 text-rose-600 flex items-center justify-center">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-7 h-7 rounded-lg bg-rose-500/15 text-rose-400 flex items-center justify-center">
             <TrendingUp className="w-3.5 h-3.5" />
           </div>
-          <h3 className="font-bold text-xs md:text-sm text-rose-700 dark:text-rose-300 uppercase tracking-wider">
-            Expenses & Profit Tracking
-          </h3>
+          <h3 className="font-semibold text-sm text-rose-400">Expenses & Profit Tracking</h3>
         </div>
-        <p className="text-xs text-muted-foreground px-4 py-2 bg-muted/20 border-b">
-          This is for your records only and won't appear on the invoice.
-        </p>
-        <ChargeRow label="Total Expenses (₹)" id="expenses" value={invoice.expenses} onChange={(v) => updateField("expenses", v)} />
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <ChargeCol label="Total Expenses (₹)" id="expenses" value={invoice.expenses} onChange={(v) => updateField("expenses", v)} />
+        </div>
       </div>
 
       {/* Terms */}
-      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-4">
+      <div className="bg-card rounded-xl border shadow-sm p-4 md:p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-sky-100 dark:bg-sky-950/40 text-sky-600 flex items-center justify-center">
-            <ScrollText className="w-4 h-4" />
+          <div className="w-7 h-7 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center">
+            <ScrollText className="w-3.5 h-3.5" />
           </div>
-          <h3 className="font-semibold text-base md:text-lg text-sky-700 dark:text-sky-300">Terms & Conditions</h3>
+          <h3 className="font-semibold text-sm text-sky-400">Terms & Conditions</h3>
         </div>
 
         <Textarea
@@ -738,7 +750,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({ invoice, onChange }) => {
 
 export default InvoiceForm;
 
-const ChargeRow = ({
+const ChargeCol = ({
   label,
   id,
   value,
@@ -749,11 +761,8 @@ const ChargeRow = ({
   value: number;
   onChange: (v: number) => void;
 }) => (
-  <div className="flex items-stretch">
-    <label
-      htmlFor={id}
-      className="w-40 shrink-0 bg-muted/30 border-r px-3 py-2 flex items-center text-[10px] font-bold uppercase tracking-wider text-foreground/80"
-    >
+  <div className="space-y-1.5">
+    <label htmlFor={id} className="text-xs font-medium text-muted-foreground">
       {label}
     </label>
     <Input
@@ -763,7 +772,32 @@ const ChargeRow = ({
       step="0.01"
       value={value}
       onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-      className="h-9 border-0 shadow-none focus-visible:ring-0 rounded-none"
+      placeholder="0.00"
+      className="h-10"
     />
+  </div>
+);
+
+const HeaderField = ({
+  label,
+  children,
+  align = "center",
+  wrapperRef,
+}: {
+  label: string;
+  children: React.ReactNode;
+  align?: "center" | "start";
+  wrapperRef?: React.RefObject<HTMLDivElement>;
+}) => (
+  <div ref={wrapperRef} className={cn("flex items-stretch", align === "start" && "items-start")}>
+    <div
+      className={cn(
+        "w-32 md:w-36 shrink-0 px-3 py-2 flex text-[11px] font-semibold uppercase tracking-wider text-muted-foreground bg-muted/30 border-r",
+        align === "center" ? "items-center" : "items-start pt-3",
+      )}
+    >
+      {label}
+    </div>
+    <div className="flex-1 flex items-center min-w-0">{children}</div>
   </div>
 );
