@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Eye, Save, Users, FilePlus, FileText, Info, Lightbulb, Keyboard } from 'lucide-react';
+import { Eye, Save, Users, FilePlus, FileText, Info, Lightbulb, Keyboard, UserPlus, Package, ListChecks, BarChart3 } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateSubtotal, calculateTax, calculateTotal } from '@/types/invoice';
 
@@ -180,22 +180,43 @@ const Dashboard = () => {
                     <Users className="w-3.5 h-3.5" />
                   </div>
                   <h3 className="font-semibold text-sm text-violet-700 dark:text-violet-300">
-                    Quick Select Customer
+                    Select Customer
                   </h3>
                 </div>
-                <Select onValueChange={handleSelectCustomer}>
-                  <SelectTrigger className="bg-background h-9">
-                    <SelectValue placeholder="Select a saved customer..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {customers.map((customer) => (
-                      <SelectItem key={customer.id} value={customer.id}>
-                        {customer.name}
-                        {customer.phone && ` - ${customer.phone}`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Select onValueChange={handleSelectCustomer}>
+                    <SelectTrigger className="bg-background h-9 flex-1">
+                      <SelectValue placeholder="Search or select a customer..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name}
+                          {customer.phone && ` - ${customer.phone}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={() => navigate('/customers')}
+                      className="h-9 bg-violet-600 hover:bg-violet-700 text-white"
+                    >
+                      <UserPlus className="w-4 h-4 mr-1.5" />
+                      New Customer
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate('/customers')}
+                      className="h-9 w-9 p-0"
+                      title="Manage customers"
+                    >
+                      <Users className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -275,6 +296,34 @@ const Dashboard = () => {
                 <li>Ctrl + P &nbsp; Preview Invoice</li>
                 <li>Ctrl + N &nbsp; New Invoice</li>
               </ul>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="rounded-xl border bg-card p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded-md bg-violet-600/20 text-violet-400 flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5" />
+                </div>
+                <h4 className="font-semibold text-foreground text-sm">Quick Actions</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={() => navigate('/customers')} className="h-auto flex-col py-2 gap-1">
+                  <UserPlus className="w-4 h-4 text-violet-400" />
+                  <span className="text-[11px]">New Customer</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/saved-items')} className="h-auto flex-col py-2 gap-1">
+                  <Package className="w-4 h-4 text-violet-400" />
+                  <span className="text-[11px]">Item List</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/history')} className="h-auto flex-col py-2 gap-1">
+                  <ListChecks className="w-4 h-4 text-violet-400" />
+                  <span className="text-[11px]">Invoice List</span>
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate('/reports')} className="h-auto flex-col py-2 gap-1">
+                  <BarChart3 className="w-4 h-4 text-amber-400" />
+                  <span className="text-[11px]">Reports</span>
+                </Button>
+              </div>
             </div>
           </aside>
         </div>
