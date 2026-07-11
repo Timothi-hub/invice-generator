@@ -369,10 +369,15 @@ export type Database = {
     }
     Functions: {
       admin_delete_user: { Args: { _user_id: string }; Returns: undefined }
+      admin_export_user_data: { Args: { _user_id: string }; Returns: Json }
       admin_get_stats: { Args: never; Returns: Json }
       admin_grant_admin_by_email: {
         Args: { _email: string }
         Returns: undefined
+      }
+      admin_import_user_data: {
+        Args: { _data: Json; _user_id: string }
+        Returns: Json
       }
       admin_list_users: {
         Args: never
