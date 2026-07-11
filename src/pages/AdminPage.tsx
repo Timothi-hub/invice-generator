@@ -20,7 +20,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search, Save, Activity } from "lucide-react";
+import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search, Save, Activity, DatabaseBackup, Upload } from "lucide-react";
 
 type Stats = {
   total_users: number;
@@ -89,6 +89,8 @@ const AdminPage = () => {
     | { kind: "revoke" | "delete" | "clear-errors"; user?: UserRow }
   >(null);
   const [lastRevoked, setLastRevoked] = useState<UserRow | null>(null);
+  const [busyBackup, setBusyBackup] = useState<string | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<UserRow | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -224,7 +226,46 @@ const AdminPage = () => {
   const deleteUser = async (u: UserRow) => {
     const { error } = await (supabase.rpc as any)("admin_delete_user", { _user_id: u.user_id });
     if (error) return toast.error(error.message);
-    toast.success("Account deleted");
+    toast.success("Account and all its data deleted");
+    load();
+  };
+
+  const backupUser = async (u: UserRow) => {
+    setBusyBackup(u.user_id);
+    const { data, error } = await (supabase.rpc as any)("admin_export_user_data", { _user_id: u.user_id });
+    setBusyBackup(null);
+    if (error) return toast.error(error.message);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const safe = u.email.replace(/[^a-z0-9._-]+/gi, "_");
+    a.download = `backup-${safe}-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success(`Backup downloaded for ${u.email}`);
+  };
+
+  const restoreUserFromFile = async (u: UserRow, file: File) => {
+    let parsed: any;
+    try {
+      parsed = JSON.parse(await file.text());
+    } catch {
+      return toast.error("Invalid JSON file");
+    }
+    setBusyBackup(u.user_id);
+    const { data, error } = await (supabase.rpc as any)("admin_import_user_data", {
+      _user_id: u.user_id,
+      _data: parsed,
+    });
+    setBusyBackup(null);
+    if (error) return toast.error(error.message);
+    const r = (data ?? {}) as any;
+    toast.success(
+      `Restored ${u.email}: ${r.invoices ?? 0} invoices, ${r.customers ?? 0} customers, ${r.saved_items ?? 0} saved items`
+    );
     load();
   };
 
@@ -444,6 +485,24 @@ const AdminPage = () => {
                             <Button variant="destructive" size="sm" onClick={() => setConfirm({ kind: "delete", user: u })} disabled={isSelf}>
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => backupUser(u)}
+                              disabled={busyBackup === u.user_id}
+                              title="Download a JSON backup of this user's data"
+                            >
+                              <DatabaseBackup className="w-3.5 h-3.5 mr-1" /> Backup
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setRestoreTarget(u)}
+                              disabled={busyBackup === u.user_id}
+                              title="Restore this user's data from a backup file"
+                            >
+                              <Upload className="w-3.5 h-3.5 mr-1" /> Restore
+                            </Button>
                           </div>
                         </td>
                       </tr>
@@ -546,6 +605,35 @@ const AdminPage = () => {
               {confirm?.kind === "delete" && "Delete permanently"}
               {confirm?.kind === "clear-errors" && "Clear all"}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!restoreTarget} onOpenChange={(o) => !o && setRestoreTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore data for {restoreTarget?.email}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will <strong>replace</strong> all invoices, customers, saved items, and profile
+              fields for <strong>{restoreTarget?.email}</strong> with the contents of the backup
+              file you choose. This cannot be undone. Select a backup JSON to proceed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Input
+              type="file"
+              accept="application/json,.json"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                const target = restoreTarget;
+                setRestoreTarget(null);
+                if (file && target) await restoreUserFromFile(target, file);
+                e.target.value = "";
+              }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
