@@ -4,6 +4,9 @@ import { useProfile } from '@/hooks/useProfile';
 import CompanySettings from '@/components/invoice/CompanySettings';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Sun, Moon } from 'lucide-react';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -13,6 +16,7 @@ interface AppLayoutProps {
 const AppLayout = ({ children, title }: AppLayoutProps) => {
   const { profile, updateProfile } = useProfile();
   const { isOwner, workspaces, activeOwnerId } = useWorkspace();
+  const { theme, toggleTheme } = useTheme();
   const activeWs = workspaces.find((w) => w.ownerId === activeOwnerId);
 
   const defaultProfile = profile || {
@@ -37,7 +41,18 @@ const AppLayout = ({ children, title }: AppLayoutProps) => {
                   <Badge variant="secondary">Shared: {activeWs.label}</Badge>
                 )}
               </div>
-              {isOwner && <CompanySettings profile={defaultProfile} onSave={updateProfile} />}
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleTheme}
+                  aria-label="Toggle theme"
+                  title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                >
+                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </Button>
+                {isOwner && <CompanySettings profile={defaultProfile} onSave={updateProfile} />}
+              </div>
             </div>
           </header>
           <main className="p-3 md:p-4">{children}</main>
