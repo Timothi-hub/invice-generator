@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (user) navigate('/', { replace: true });
@@ -32,6 +34,23 @@ const Login = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      toast.error('Enter your email above first');
+      return;
+    }
+    setResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success('Password reset link sent — check your email');
   };
 
   const handleGoogleSignIn = async () => {
@@ -75,7 +94,17 @@ const Login = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetting}
+                  className="text-xs text-primary hover:underline disabled:opacity-50"
+                >
+                  {resetting ? 'Sending…' : 'Forgot password?'}
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
