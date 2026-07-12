@@ -690,6 +690,72 @@ const AdminPage = () => {
             )}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <ScrollText className="w-5 h-5 text-primary" /> Admin Audit Log ({audit.length})
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={load}>
+                <RefreshCw className="w-4 h-4 mr-1" /> Refresh
+              </Button>
+              <Button variant="destructive" size="sm" onClick={clearAudit} disabled={audit.length === 0}>
+                <Trash2 className="w-4 h-4 mr-1" /> Clear
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {audit.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">No admin actions recorded yet.</p>
+            ) : (
+              <ScrollArea className="h-[360px]">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-muted-foreground border-b">
+                    <tr>
+                      <th className="py-2 pr-2">When</th>
+                      <th className="py-2 pr-2">Action</th>
+                      <th className="py-2 pr-2">Actor</th>
+                      <th className="py-2 pr-2">Target</th>
+                      <th className="py-2 pr-2">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {audit.map((a) => {
+                      const badge =
+                        a.action === "purge"
+                          ? "bg-destructive/15 text-destructive"
+                          : a.action === "restore"
+                            ? "bg-amber-500/15 text-amber-600"
+                            : a.action === "backup"
+                              ? "bg-emerald-500/15 text-emerald-600"
+                              : "bg-muted text-muted-foreground";
+                      return (
+                        <tr key={a.id} className="border-b last:border-0 align-top">
+                          <td className="py-2 pr-2 whitespace-nowrap text-xs text-muted-foreground">
+                            {new Date(a.created_at).toLocaleString()}
+                          </td>
+                          <td className="py-2 pr-2">
+                            <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded ${badge}`}>
+                              {a.action}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-2 text-xs">{a.actor_email ?? a.actor_id?.slice(0, 8) ?? "—"}</td>
+                          <td className="py-2 pr-2 text-xs">{a.target_email ?? a.target_user_id?.slice(0, 8) ?? "—"}</td>
+                          <td className="py-2 pr-2 text-xs font-mono text-muted-foreground break-all">
+                            {a.details && Object.keys(a.details).length > 0
+                              ? JSON.stringify(a.details)
+                              : "—"}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </ScrollArea>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={!!confirm} onOpenChange={(o) => !o && setConfirm(null)}>
