@@ -20,7 +20,8 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search, Save, Activity, DatabaseBackup, Upload } from "lucide-react";
+import { Users, FileText, UserSquare, AlertCircle, ShieldCheck, RefreshCw, Download, Trash2, UserPlus, UserMinus, CalendarClock, Search, Save, Activity, DatabaseBackup, Upload, ScrollText, CheckCircle2, XCircle } from "lucide-react";
+import { z } from "zod";
 
 type Stats = {
   total_users: number;
@@ -52,6 +53,83 @@ type UserRow = {
   is_admin: boolean;
   invoice_count: number;
   expires_at: string | null;
+};
+
+type AuditRow = {
+  id: string;
+  actor_id: string | null;
+  actor_email: string | null;
+  target_user_id: string | null;
+  target_email: string | null;
+  action: string;
+  details: any;
+  created_at: string;
+};
+
+// Backup file schema — validated before restore.
+const backupSchema = z.object({
+  version: z.number().optional(),
+  exported_at: z.string().optional(),
+  user_id: z.string().uuid().optional(),
+  email: z.string().nullable().optional(),
+  profile: z
+    .object({
+      company_name: z.string().nullable().optional(),
+      logo_url: z.string().nullable().optional(),
+      address: z.string().nullable().optional(),
+      phone: z.string().nullable().optional(),
+      website: z.string().nullable().optional(),
+      director_name: z.string().nullable().optional(),
+    })
+    .passthrough()
+    .nullable()
+    .optional(),
+  customers: z
+    .array(
+      z
+        .object({
+          name: z.string().max(200),
+          email: z.string().nullable().optional(),
+          phone: z.string().nullable().optional(),
+          address: z.string().nullable().optional(),
+        })
+        .passthrough(),
+    )
+    .optional(),
+  saved_items: z
+    .array(
+      z
+        .object({
+          description: z.string().max(500),
+          price: z.union([z.number(), z.string()]).optional(),
+        })
+        .passthrough(),
+    )
+    .optional(),
+  invoices: z
+    .array(
+      z.object({
+        invoice: z
+          .object({
+            invoice_number: z.string().max(120),
+            customer_name: z.string().max(200),
+          })
+          .passthrough(),
+        items: z.array(z.record(z.string(), z.any())).optional(),
+      }),
+    )
+    .optional(),
+  account_status: z.any().optional(),
+});
+
+type BackupPayload = z.infer<typeof backupSchema>;
+
+type RestorePreview = {
+  file: File;
+  data: BackupPayload;
+  counts: { customers: number; saved_items: number; invoices: number; invoice_items: number };
+  sourceEmail: string | null;
+  exportedAt: string | null;
 };
 
 const StatCard = ({ label, value, icon: Icon, color }: { label: string; value: number | string; icon: any; color: string }) => (
@@ -91,18 +169,29 @@ const AdminPage = () => {
   const [lastRevoked, setLastRevoked] = useState<UserRow | null>(null);
   const [busyBackup, setBusyBackup] = useState<string | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<UserRow | null>(null);
+  const [restorePreview, setRestorePreview] = useState<
+    | (RestorePreview & { target: UserRow })
+    | null
+  >(null);
+  const [audit, setAudit] = useState<AuditRow[]>([]);
 
   const load = async () => {
     setLoading(true);
-    const [statsRes, errRes, usersRes] = await Promise.all([
+    const [statsRes, errRes, usersRes, auditRes] = await Promise.all([
       supabase.rpc("admin_get_stats"),
       supabase.from("error_logs").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.rpc("admin_list_users"),
+      (supabase as any)
+        .from("admin_audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200),
     ]);
     if (statsRes.error) toast.error(statsRes.error.message);
     else setStats(statsRes.data as unknown as Stats);
     if (!errRes.error) setErrors(errRes.data as ErrorRow[]);
     if (!usersRes.error) setUsers((usersRes.data as UserRow[]) || []);
+    if (!auditRes.error) setAudit((auditRes.data as AuditRow[]) || []);
     setLoading(false);
   };
 
@@ -248,24 +337,65 @@ const AdminPage = () => {
     toast.success(`Backup downloaded for ${u.email}`);
   };
 
-  const restoreUserFromFile = async (u: UserRow, file: File) => {
-    let parsed: any;
+  const openRestorePreview = async (u: UserRow, file: File) => {
+    let raw: unknown;
     try {
-      parsed = JSON.parse(await file.text());
+      raw = JSON.parse(await file.text());
     } catch {
       return toast.error("Invalid JSON file");
     }
-    setBusyBackup(u.user_id);
-    const { data, error } = await (supabase.rpc as any)("admin_import_user_data", {
-      _user_id: u.user_id,
-      _data: parsed,
+    const parsed = backupSchema.safeParse(raw);
+    if (!parsed.success) {
+      const first = parsed.error.issues[0];
+      return toast.error(
+        `Backup validation failed: ${first?.path.join(".") || "root"} — ${first?.message ?? "invalid"}`,
+      );
+    }
+    const data = parsed.data;
+    const invoiceItemCount = (data.invoices ?? []).reduce(
+      (n, inv) => n + (inv.items?.length ?? 0),
+      0,
+    );
+    setRestorePreview({
+      target: u,
+      file,
+      data,
+      sourceEmail: (data.email as string | null | undefined) ?? null,
+      exportedAt: data.exported_at ?? null,
+      counts: {
+        customers: data.customers?.length ?? 0,
+        saved_items: data.saved_items?.length ?? 0,
+        invoices: data.invoices?.length ?? 0,
+        invoice_items: invoiceItemCount,
+      },
+    });
+  };
+
+  const confirmRestore = async () => {
+    if (!restorePreview) return;
+    const { target, data } = restorePreview;
+    setRestorePreview(null);
+    setBusyBackup(target.user_id);
+    const { data: result, error } = await (supabase.rpc as any)("admin_import_user_data", {
+      _user_id: target.user_id,
+      _data: data,
     });
     setBusyBackup(null);
     if (error) return toast.error(error.message);
-    const r = (data ?? {}) as any;
+    const r = (result ?? {}) as any;
     toast.success(
-      `Restored ${u.email}: ${r.invoices ?? 0} invoices, ${r.customers ?? 0} customers, ${r.saved_items ?? 0} saved items`
+      `Restored ${target.email}: ${r.invoices ?? 0} invoices, ${r.customers ?? 0} customers, ${r.saved_items ?? 0} saved items`,
     );
+    load();
+  };
+
+  const clearAudit = async () => {
+    const { error } = await (supabase as any)
+      .from("admin_audit_log")
+      .delete()
+      .not("id", "is", null);
+    if (error) return toast.error(error.message);
+    toast.success("Audit log cleared");
     load();
   };
 
@@ -612,11 +742,10 @@ const AdminPage = () => {
       <AlertDialog open={!!restoreTarget} onOpenChange={(o) => !o && setRestoreTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Restore data for {restoreTarget?.email}?</AlertDialogTitle>
+            <AlertDialogTitle>Choose a backup for {restoreTarget?.email}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will <strong>replace</strong> all invoices, customers, saved items, and profile
-              fields for <strong>{restoreTarget?.email}</strong> with the contents of the backup
-              file you choose. This cannot be undone. Select a backup JSON to proceed.
+              The file will be validated and you'll see a preview of exactly what will be restored
+              before anything is written.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-2">
@@ -627,13 +756,64 @@ const AdminPage = () => {
                 const file = e.target.files?.[0];
                 const target = restoreTarget;
                 setRestoreTarget(null);
-                if (file && target) await restoreUserFromFile(target, file);
+                if (file && target) await openRestorePreview(target, file);
                 e.target.value = "";
               }}
             />
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!restorePreview} onOpenChange={(o) => !o && setRestorePreview(null)}>
+        <AlertDialogContent className="max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              Restore preview
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <div>
+                  Restoring <strong>{restorePreview?.target.email}</strong> from backup
+                  {restorePreview?.sourceEmail ? (
+                    <> of <strong>{restorePreview.sourceEmail}</strong></>
+                  ) : null}
+                  {restorePreview?.exportedAt ? (
+                    <> taken {new Date(restorePreview.exportedAt).toLocaleString()}</>
+                  ) : null}
+                  .
+                </div>
+                <div className="grid grid-cols-2 gap-2 rounded-md border p-3 bg-muted/30">
+                  <div>Customers</div>
+                  <div className="text-right font-mono">{restorePreview?.counts.customers ?? 0}</div>
+                  <div>Saved items</div>
+                  <div className="text-right font-mono">{restorePreview?.counts.saved_items ?? 0}</div>
+                  <div>Invoices</div>
+                  <div className="text-right font-mono">{restorePreview?.counts.invoices ?? 0}</div>
+                  <div>Invoice line items</div>
+                  <div className="text-right font-mono">{restorePreview?.counts.invoice_items ?? 0}</div>
+                </div>
+                <div className="flex items-start gap-2 text-destructive text-xs">
+                  <XCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>
+                    Existing invoices, customers, saved items, and profile fields for this user
+                    will be replaced. This cannot be undone.
+                  </span>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRestore}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Replace data
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
